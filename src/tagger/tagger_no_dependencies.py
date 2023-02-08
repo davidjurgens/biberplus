@@ -63,5 +63,62 @@ class SimpleWordTagger:
         if self.word['text'].lower() in self.patterns_dict['place_adverbials'] and self.word['xpos'] != "NNP":
             self.word.tags.append('PLACE')
 
-    def tag_time(self):
-        pass
+    def tag_pubv(self):
+        """ Any item in the public verbs list """
+        if self.word['text'].lower() in self.patterns_dict['public_verbs']:
+            self.word.tags.append('PUBV')
+
+    def tag_priv(self):
+        """ Any item in the private verbs list """
+        if self.word['text'].lower() in self.patterns_dict['private_verbs']:
+            self.word.tags.append('PRIV')
+
+    def tag_suav(self):
+        """ Any item in the suasive verbs list """
+        if self.word['text'].lower() in self.patterns_dict['suasive_verbs']:
+            self.word.tags.append('SUAV')
+
+    def tag_smp(self):
+        """ Any occurrence of the forms of the two verbs seem and appear """
+        if self.word['text'].lower() in self.patterns_dict['seem_appear']:
+            self.word.tags.append('SMP')
+
+    def tag_cont(self):
+        """ Any instance of apostrophe followed by a tagged word OR any instance of the item n’t """
+        if ("'" in self.word['text'] and len(self.sentence) > self.word_index) or (self.word['text'][-3:] == "n't"):
+            self.word.tags.append('CONT')
+
+    def tag_dwnt(self):
+        """ Any instance of the words in the downtowners list """
+        if self.word['text'].lower() in self.patterns_dict['downtowners']:
+            self.word.tags.append('DWNT')
+
+    def tag_amp(self):
+        """ Any instance of the items in the amplifiers list """
+        if self.word['text'].lower() in self.patterns_dict['amplifiers']:
+            self.word.tags.append('AMP')
+
+    def tag_rb(self):
+        """ Any adverb i.e. POS tags RB, RBS, RBR, WRB"""
+        if self.word['xpos'] in ['RB', 'RBS', 'RBR', 'WRB']:
+            self.word.tags.append('RB')
+
+    def tag_caus(self):
+        """ Any occurrence of the word because """
+        if self.word['text'].lower() == 'because':
+            self.word.tags.append('CAUS')
+
+    def tag_conc(self):
+        """ Any occurrence of the words although, though, tho """
+        if self.word['text'].lower() in ['although', 'though', 'tho']:
+            self.word.tags.append('CONC')
+
+    def tag_cond(self):
+        """ Any occurrence of the words if or unless"""
+        if self.word['text'].lower() in ['if', 'unless']:
+            self.word.tags.append('COND')
+
+    def tag_vbd(self):
+        """ Past tense POS """
+        if self.word['xpos'] == 'VBD':
+            self.word.tags.append('VBD')
