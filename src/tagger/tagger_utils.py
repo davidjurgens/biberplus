@@ -1,9 +1,21 @@
-import stanza
+from glob import glob
 
-stanza.download('en')
-nlp = stanza.Pipeline('en')
-doc = nlp("Barack Obama was born in Hawaii.  He was elected president in 2008.")
-doc.sentences[0].print_dependencies()
+
+def save_tagged_doc(tagged_sentences):
+    pass
+
+
+def build_variable_dictionaries():
+    constant_files = glob('constants/*.txt')
+    variables_dict = {}
+
+    for constant_file in constant_files:
+        # E.g. constants/suasive_verbs.txt -> suasive_verbs
+        file_name = constant_file.split('/')[-1].replace('.txt', '')
+        variables_dict[file_name] = read_in_variables(constant_file)
+
+    return variables_dict
+
 
 def read_in_variables(txt_file):
     variables = []
@@ -12,4 +24,4 @@ def read_in_variables(txt_file):
             var = line.strip()
             if var:
                 variables.append(var)
-    return variables
+    return set(variables)
