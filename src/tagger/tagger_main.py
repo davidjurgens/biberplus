@@ -2,9 +2,9 @@ import argparse
 
 import stanza
 
-from tagger_dependencies import WordTagger
-from tagger_no_dependencies import SimpleWordTagger
+from simple_word_tagger import SimpleWordTagger
 from tagger_utils import build_variable_dictionaries, save_tagged_doc
+from word_tagger import WordTagger
 
 
 def run_tagger(nlp_pipeline, text):
@@ -18,9 +18,11 @@ def run_tagger(nlp_pipeline, text):
         for word_index, word in enumerate(sentence):
             # Tags everything that does have any prior dependencies (2/3rds of the tags have no dependencies)
             simple_tagger = SimpleWordTagger(sentence, word, word_index, patterns_dict)
+            simple_tagger.run_all()
             word = simple_tagger.word
             # Tags everything that requires a tag before it to be complete. Requires specific order
             word_tagger = WordTagger(sentence, word, word_index, patterns_dict)
+            word_tagger.run_all()
             tagged_sentence.append(word_tagger.word)
 
         tagged_sentences.append(tagged_sentence)

@@ -1,3 +1,4 @@
+import os
 from glob import glob
 
 
@@ -6,7 +7,8 @@ def save_tagged_doc(tagged_sentences):
 
 
 def build_variable_dictionaries():
-    constant_files = glob('constants/*.txt')
+    script_dir = os.path.dirname(__file__)
+    constant_files = glob(script_dir + '/constants/*.txt')
     variables_dict = {}
 
     for constant_file in constant_files:
