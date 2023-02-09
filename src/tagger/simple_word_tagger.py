@@ -205,3 +205,13 @@ class SimpleWordTagger:
                 next_word = self.sentence[self.word_index + 1]
                 if next_word['xpos'] not in filter_preps:
                     self.word.tags.append('TO')
+
+    def tag_pastp(self):
+        """ Past partcipial clauses: punctuation followed by VBN -> PIN or RB
+         e.g. 'Built in a single week,' the house would stand for fifty years"""
+        pass
+
+    def tag_wzpres(self):
+        """ Present participial WHIZ deletion relatives: VBG preceded by an NN
+        e.g. the 'causing this decline' is """
+        pass
