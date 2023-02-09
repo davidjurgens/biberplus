@@ -26,6 +26,15 @@ class SimpleWordTagger:
         for method in methods:
             method()
 
+    def is_first_word_in_sentence(self):
+        return self.word_index == 0
+
+    def is_last_word_in_sentence(self):
+        return len(self.sentence) == self.word_index + 1
+
+    def is_noun(self):
+        return self.word['xpos'][:2] in ['NN', 'PR', 'WP']
+
     def tag_fpp1(self):
         """ Any item of this list: I, me, us, my, we, our, myself, ourselves """
         if self.word['text'].lower() in self.patterns_dict['first_person_pronouns']:
@@ -54,9 +63,19 @@ class SimpleWordTagger:
         if self.word['text'].lower() in self.patterns_dict['indefinite_pronouns']:
             self.word.tags.append('INPR')
 
-    def tag_analytic_negation(self):
+    def tag_xxo(self):
+        """ Analytic negation: word 'not' and to the item n’t_RB"""
+        # TODO: Revisit the definition
         if self.word['text'].lower() == 'not' or (self.word['xpos'] == 'RB' and self.word[-3:] == "n't"):
             self.word.tags.append('XXO')
+
+    def tag_syne(self):
+        """ Synthetic negation: (no, neither, nor) followed by an adjective, noun, or proper noun"""
+        if not self.is_last_word_in_sentence():
+            next_word = self.sentence[self.word_index + 1]
+            if self.word['text'].lower() in self.patterns_dict['synthetic_negations'] and \
+                    next_word in ['xpos'] in ['JJ', 'JJR', 'JJS', 'NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$']:
+                self.word.tags.append('SYNE')
 
     def tag_place(self):
         """ Any item in the place adverbials list that is not a proper noun (NNP) """
@@ -85,7 +104,7 @@ class SimpleWordTagger:
 
     def tag_cont(self):
         """ Any instance of apostrophe followed by a tagged word OR any instance of the item n’t """
-        if ("'" in self.word['text'] and len(self.sentence) > self.word_index) or (self.word['text'][-3:] == "n't"):
+        if ("'" in self.word['text'] and not self.is_last_word_in_sentence()) or (self.word['text'][-3:] == "n't"):
             self.word.tags.append('CONT')
 
     def tag_dwnt(self):
@@ -122,3 +141,67 @@ class SimpleWordTagger:
         """ Past tense POS """
         if self.word['xpos'] == 'VBD':
             self.word.tags.append('VBD')
+
+    def tag_ex(self):
+        """ Existential there from the POS tags"""
+        if self.word['xpos'] == 'EX':
+            self.word.tags.append('EX')
+
+    def tag_dpar(self):
+        """ Discourse particle: the words well, now, anyhow, anyways preceded by a punctuation mark """
+        if not self.is_first_word_in_sentence():
+            prev_word = self.sentence[self.word_index - 1]
+            if self.word['text'].lower() in self.patterns_dict['discourse_particles'] and prev_word['upos'] == 'PUNC':
+                self.word.tags.append('DPAR')
+
+    def tag_pomd(self):
+        """ The possibility modals listed by Biber (1988): can, may, might, could """
+        if self.word['text'].lower() in self.patterns_dict['possibility_modals']:
+            self.word.tags.append('POMD')
+
+    def tag_nemd(self):
+        """ The necessity modals listed by Biber (1988): ought, should, must. """
+        if self.word['text'].lower() in self.patterns_dict['necessity_modals']:
+            self.word.tags.append('NEMD')
+
+    def tag_conj(self):
+        """ Conjucts finds any item in the conjucts list with preceding punctuation.
+        Only the first word is tagged """
+        if not self.is_first_word_in_sentence():
+            prev_word = self.sentence[self.word_index - 1]
+            if prev_word['upos'] == 'PUNC' and self.word['text'].lower() in self.patterns_dict['conjucts']:
+                self.word.tags.append('CONJ')
+
+    def tag_ger(self):
+        """ Gerunds with length >= 10 are nominal form (N) that ends in –ing or –ings """
+        if len(self.word['text']) >= 10 and \
+                (self.word['text'].lower()[-3:] == 'ing' or self.word['text'].lower()[-4:] == 'ings') and \
+                (self.is_noun()):
+            self.word.tags.append('GER')
+
+    def tag_vprt(self):
+        """ Present tense: VBP or VBZ tag"""
+        if self.word['xpos'] in ['VBP', 'VBZ']:
+            self.word.tags.append('VPRT')
+
+    def tag_time(self):
+        """ Time adverbials with the exception: soon is not a time adverbial if it is followed by the word as """
+        if self.word['text'].lower() in self.patterns_dict['time_adverbials']:
+            if self.word['text'].lower() != 'soon':
+                self.word.tags.append('TIME')
+
+            if not self.is_last_word_in_sentence():
+                next_word = self.sentence[self.word_index + 1]
+                if next_word['text'].lower() != 'as':
+                    self.word.tags.append('TIME')
+
+    def tag_to(self):
+        """ Infinitives: POS tag TO that are not a preposition """
+        if self.word['xpos'] == 'TO':
+            # Prepositions are 'to's followed by
+            filter_preps = ['IN', 'CD', 'DT', 'JJ', 'PRP$', 'WP$', 'WDT', 'WP', 'WRB',
+                            'PDT', 'N', 'NNS', 'NP', 'NPs', 'PRP']
+            if not self.is_last_word_in_sentence():
+                next_word = self.sentence[self.word_index + 1]
+                if next_word['xpos'] not in filter_preps:
+                    self.word.tags.append('TO')
