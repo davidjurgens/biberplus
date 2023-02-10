@@ -1,9 +1,12 @@
 import os
 from glob import glob
 
+import pandas as pd
 
-def save_tagged_doc(tagged_sentences):
-    pass
+
+def tagged_words_to_tsv(tagged_words, out_file):
+    tagged_words_df = pd.DataFrame(tagged_words)
+    tagged_words_df.to_csv(out_file, sep='\t', index=False)
 
 
 def build_variable_dictionaries():
