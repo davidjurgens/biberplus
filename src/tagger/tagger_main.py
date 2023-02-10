@@ -10,24 +10,16 @@ from word_tagger import WordTagger
 def run_tagger(nlp_pipeline, text):
     patterns_dict = build_variable_dictionaries()
     doc = nlp_pipeline(text)
-    doc = doc.to_dict()
-    tagged_sentences = []
 
-    for sent_index, sentence in enumerate(doc):
-        tagged_sentence = []
-        for word_index, word in enumerate(sentence):
-            # Tags everything that does have any prior dependencies (2/3rds of the tags have no dependencies)
-            simple_tagger = SimpleWordTagger(sentence, word, word_index, patterns_dict)
-            simple_tagger.run_all()
-            word = simple_tagger.word
-            # Tags everything that requires a tag before it to be complete. Requires specific order
-            word_tagger = WordTagger(sentence, word, word_index, patterns_dict)
-            word_tagger.run_all()
-            tagged_sentence.append(word_tagger.word)
+    # Tags everything that does have any prior dependencies (2/3rds of the tags have no dependencies)
+    simple_tagger = SimpleWordTagger(doc, patterns_dict)
+    simple_tagger.run_all()
 
-        tagged_sentences.append(tagged_sentence)
+    # Tags everything that requires a tag before it to be complete. Requires specific order
+    word_tagger = WordTagger(tagged_words=simple_tagger.tagged_words, patterns_dict=patterns_dict)
+    word_tagger.run_all()
 
-    return tagged_sentences
+    return word_tagger.tagged_words
 
 
 def main(args):
