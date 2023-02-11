@@ -33,7 +33,19 @@ class TestVerbFunctions(unittest.TestCase):
         self.assertIn('SUAV', tagger.tagged_words[1]['tags'])
 
     def test_bema(self):
-        self.assertTrue(True)
+        doc = self.pipeline(
+            'have a little boy that likes tractors , you can be certain this will be entertaining to him ! ')
+        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # 'Be' should be tagged as BEMA
+        self.assertIn('BEMA', tagger.tagged_words[10]['tags'])
+
+    def test_smp(self):
+        doc = self.pipeline('edge of the bank . From the outside , it seemed no more than a low drumlin , a lump')
+        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # Seemed should be tagged as SMP
+        self.assertIn('SMP', tagger.tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':
