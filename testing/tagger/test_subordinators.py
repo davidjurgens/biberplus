@@ -44,7 +44,13 @@ class TestSubordinatorsFunctions(unittest.TestCase):
         self.assertIn('OSUB', tagger.tagged_words[10]['tags'])
 
     def test_thatd(self):
-        pass
+        doc = self.pipeline('be as in depth in that area . I just found that this book helped tremendously '
+                            'in regards to its')
+        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # Found should be tagged as THATD
+        self.assertIn('THATD', tagger.tagged_words[10]['tags'])
+
 
 if __name__ == '__main__':
     unittest.main()
