@@ -44,19 +44,35 @@ class TestNounFunctions(unittest.TestCase):
         self.assertIn('PRIV', tagger.tagged_words[10]['tags'])
 
     def test_demp(self):
-        pass
+        doc = self.pipeline('Vernon on the morning of the regular tallyho run . This was an honor , '
+                            'like dining with a captain')
+        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # This should be tagged as a DEMP
+        self.assertIn('DEMP', tagger.tagged_words[10]['tags'])
 
     def test_inpr(self):
-        pass
+        doc = self.pipeline("I turned away from her coldly . `` It was nobody 's fault . She overplayed her hand '' .")
+        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # Nobody should be tagged as a INPR
+        self.assertIn('INPR', tagger.tagged_words[10]['tags'])
 
     def test_nomz(self):
-        pass
+        doc = self.pipeline('consular materials to reveal the motives which led the British government to permit '
+                            'Garibaldi to cross the Straits of Messina')
+        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # Government should be tagged as a NOMZ
+        self.assertIn('NOMZ', tagger.tagged_words[10]['tags'])
 
-    def test_gerunds(self):
-        pass
-
-    def test_total_other_nouns(self):
-        pass
+    def test_ger(self):
+        doc = self.pipeline('Democratic gubernatorial candidate , that the ~ GOP is `` Campaigning on the carcass of '
+                            'Eisenhower Republicanism '' . Mitchell')
+        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # Campaigning should be tagged as a GER
+        self.assertIn('GER', tagger.tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':
