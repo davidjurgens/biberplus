@@ -11,6 +11,9 @@ class TestVerbFunctions(unittest.TestCase):
         self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
         self.patterns_dict = build_variable_dictionaries()
 
+    def test_vbd(self):
+        pass
+
     def test_priv(self):
         doc = self.pipeline('I expected to see ten, but instead saw twelve')
         tagger = SimpleWordTagger(doc, self.patterns_dict)

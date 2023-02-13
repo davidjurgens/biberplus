@@ -43,6 +43,8 @@ class TestSubordinatorsFunctions(unittest.TestCase):
         # Since should be tagged as an OSUB
         self.assertIn('OSUB', tagger.tagged_words[10]['tags'])
 
+    def test_thatd(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
