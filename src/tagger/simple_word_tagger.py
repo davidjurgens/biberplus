@@ -1,5 +1,7 @@
 import inspect
 
+import numpy as np
+
 
 class SimpleWordTagger:
     def __init__(self, doc, patterns_dict):
@@ -11,8 +13,11 @@ class SimpleWordTagger:
         """
         self.doc = doc
         self.words = list(doc.iter_words())
-        self.tagged_words = []
         self.patterns_dict = patterns_dict
+        self.tagged_words = []
+        self.word_lengths = []
+        self.adverb_count = 0
+        self.mean_word_length = -1
 
     def run_all(self):
         """ Run all tagger functions defined in this class"""
@@ -29,7 +34,16 @@ class SimpleWordTagger:
                 tag = tag_method(tagged_word, index)
                 if tag:
                     tagged_word['tags'].append(tag)
+
             self.tagged_words.append(tagged_word)
+
+        self.mean_word_length = np.array(self.word_lengths).mean()
+
+    def update_doc_level_stats(self, word):
+        if self.is_adverb(word):
+            self.adverb_count += 1
+
+        self.word_lengths.append(len(word['text']))
 
     def get_previous_word(self, index):
         return self.words[index - 1].to_dict()
@@ -37,6 +51,10 @@ class SimpleWordTagger:
     def get_next_word(self, index):
         if index + 1 < len(self.words):
             return self.words[index + 1].to_dict()
+
+    @staticmethod
+    def is_adverb(word):
+        return 'RB' in word['upos']
 
     @staticmethod
     def is_first_word_in_sentence(word):
@@ -243,4 +261,47 @@ class SimpleWordTagger:
     def tag_wzpres(self, word, word_index):
         """ Present participial WHIZ deletion relatives: VBG preceded by an NN
         e.g. the 'causing' this decline' is """
+        pass
+
+    def tag_pass(self, word, word_index):
+        """ Agentless passives are tagged for 2 patterns. First, any form BE + (VBD|VBN) with 1-2 optional
+        intervening RBs or negations. Second any form BE + nominal form (noun|pronoun) + (VBN|VBD)
+        with optional negation. Original Biber did not allow for interverning negation in this pattern"""
+        pass
+
+    def tag_jj(self, word, word_index):
+        """ Attributive adjectives """
+        if word['upos'] in ['JJ', 'JJR', 'JJS']:
+            return 'JJ'
+
+    def tag_bema(self, word, word_index):
+        """ Be as main verb (BEMA): BE followed by a (DT), (PRP$) or a (PIN) or an adjective (JJ). Modified from
+        the original algorithm to take adverbs and negations into account. Also no double coding
+        with existential there """
+        pass
+
+    def tag_osub(self, word, word_index):
+        """ Other adverbial subordinators. Any occurrence of the OSUB words. For multi-word units only tag the first """
+        pass
+
+    def tag_phc(self, word, word_index):
+        """ Phrasal coordination. Any 'and' followed by the same tag if the tag is in (adverb, adjective, verb, noun)"""
+        pass
+
+    def tag_prmd(self, word, word_index):
+        """ Predictive modals. will, would, shall and their contractions: ‘d_MD, ll_MD, wo_MD, sha_MD"""
+        pass
+
+    def tag_sere(self, word, word_index):
+        """ Sentence relatives. Everytime a punctuation mark is followed by the word which """
+        pass
+
+    def tag_stpr(self, word, word_index):
+        """ Stranded preposition. Preposition followed by a punctuation mark.
+        Update from Biber: can't be the word besides. E.g. the candidates I was thinking 'of',"""
+        pass
+
+    def tag_pin(self, word, word_index):
+        """ Total prepositional phrases. Preposition 'to' is disambiguated from the infinitive marker to.
+        Biber doesn't mention if he differentiates between the 2 """
         pass
