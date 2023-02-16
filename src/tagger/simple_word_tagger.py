@@ -305,3 +305,8 @@ class SimpleWordTagger:
         """ Total prepositional phrases. Preposition 'to' is disambiguated from the infinitive marker to.
         Biber doesn't mention if he differentiates between the 2 """
         pass
+
+    def tag_nomz(self, word, word_index):
+        """ Any noun ending in -tion, -ment, -ness, or -ity, plus the plural form. Use a stop list to avoid
+        erroneous tagging (e.g. city)."""
+        pass
