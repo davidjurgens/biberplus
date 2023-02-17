@@ -2,7 +2,7 @@ import inspect
 
 import numpy as np
 
-from tag_helper import TagHelper
+from src.tagger.tag_helper import TagHelper
 
 
 class SimpleWordTagger:
@@ -32,6 +32,7 @@ class SimpleWordTagger:
 
         for index, word in enumerate(self.words):
             tagged_word = word.to_dict()
+            tagged_word[index] = index
             tagged_word['tags'] = []
             for tag_method in tag_methods:
                 tag = tag_method(tagged_word, index)
@@ -197,15 +198,14 @@ class SimpleWordTagger:
         if word['text'].lower() in self.patterns_dict['conjucts']:
             return 'CONJ'
 
-        if not self.is_last_word_in_sentence(word):
+        if not self.is_last_word_in_sentence(word_index):
             prev_word = self.get_previous_word(word_index)
             if self.helper.is_punctuation(prev_word) and word['text'].lower() in ['altogether', 'rather']:
                 return 'CONJ'
 
     def tag_ger(self, word, word_index):
         """ Gerunds with length > 10 are nominal form (N) that ends in –ing or –ings """
-        if len(word['text']) > 10 and self.helper.is_noun(word) and \
-                (word['text'].lower()[-3:] == 'ing' or word['text'].lower()[-4:] == 'ings'):
+        if len(word['text']) > 10 and "VerbForm=Ger" in word['feats']:
             return 'GER'
 
     def tag_vprt(self, word, word_index):

@@ -41,7 +41,7 @@ class TestNounFunctions(unittest.TestCase):
         tagger = SimpleWordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # It should be tagged as a PIT
-        self.assertIn('PRIV', tagger.tagged_words[10]['tags'])
+        self.assertIn('PIT', tagger.tagged_words[10]['tags'])
 
     def test_demp(self):
         doc = self.pipeline('Vernon on the morning of the regular tallyho run . This was an honor , '
