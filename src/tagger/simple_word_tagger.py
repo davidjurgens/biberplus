@@ -240,7 +240,13 @@ class SimpleWordTagger:
         """ Present participial clauses: a punctuation mark is followed by a present participial
         form of a verb (VBG) followed by a preposition (PIN), a determiner (DT, QUAN, CD), a WH pronoun,
         a WH possessive pronoun (WP$), any WH word, any pronoun (PRP) or any adverb (RB)-"""
-        pass
+        if word_index > 0 and not self.is_last_word_in_sentence(word_index):
+            prev_word = self.get_previous_word(word_index)
+            next_word = self.get_next_word(word_index)
+            if self.helper.is_punctuation(prev_word) and word['upos'] == 'VBG':
+                if (self.helper.is_adposition(next_word) and next_word['xpos'] == 'IN') or \
+                        next_word['xpos'] in ['DT', 'QUAN', 'CD', 'WH', 'WP', 'WP$', 'PRP', 'RB']:
+                    return 'PRESP'
 
     def tag_pastp(self, word, word_index):
         """ Past partcipial clauses: punctuation followed by VBN -> PIN or RB
@@ -256,7 +262,10 @@ class SimpleWordTagger:
     def tag_wzpres(self, word, word_index):
         """ Present participial WHIZ deletion relatives: VBG preceded by an NN
         e.g. the 'causing' this decline' is """
-        pass
+        if word['xpos'] == 'VBG' and not self.helper.is_first_word(word):
+            prev_word = self.get_previous_word(word_index)
+            if self.helper.is_noun(prev_word):
+                return 'WZPREZ'
 
     def tag_pass(self, word, word_index):
         """ Agentless passives are tagged for 2 patterns. First, any form BE + (VBD|VBN) with 1-2 optional
@@ -266,7 +275,7 @@ class SimpleWordTagger:
 
     def tag_jj(self, word, word_index):
         """ Attributive adjectives """
-        if word['upos'] in ['JJ', 'JJR', 'JJS']:
+        if word['xpos'] in ['JJ', 'JJR', 'JJS']:
             return 'JJ'
 
     def tag_bema(self, word, word_index):
@@ -277,31 +286,53 @@ class SimpleWordTagger:
 
     def tag_osub(self, word, word_index):
         """ Other adverbial subordinators. Any occurrence of the OSUB words. For multi-word units only tag the first """
-        pass
+        if word['text'].lower() in self.patterns_dict['other_adverbial_subordinators']:
+            return "OSUB"
+
+        # TODO: Come back and finish this. Multi-words are annoying
 
     def tag_phc(self, word, word_index):
         """ Phrasal coordination. Any 'and' followed by the same tag if the tag is in (adverb, adjective, verb, noun)"""
-        pass
+        if word['text'].lower() == 'and':
+            if not self.helper.is_first_word(word) and not self.is_last_word_in_sentence(word_index):
+                prev_word = self.get_previous_word(word_index)
+                next_word = self.get_next_word(word_index)
+                if prev_word['upos'] == next_word['upos']:
+                    if self.helper.is_adverb(prev_word) or self.helper.is_adjective(prev_word) or \
+                            self.helper.is_verb(prev_word) or self.helper.is_noun(
+                        prev_word) or self.helper.is_proper_noun(prev_word):
+                        return "PHC"
 
     def tag_prmd(self, word, word_index):
         """ Predictive modals. will, would, shall and their contractions: ‘d_MD, ll_MD, wo_MD, sha_MD"""
-        pass
+        # TODO: Revisit contractions
+        if word['text'].lower() in self.patterns_dict['predictive_modals']:
+            return 'PRMD'
 
     def tag_sere(self, word, word_index):
         """ Sentence relatives. Everytime a punctuation mark is followed by the word which """
-        pass
+        if not self.is_last_word_in_sentence(word_index):
+            next_word = self.get_next_word(word_index)
+            if self.helper.is_punctuation(word) and next_word['text'].lower() == 'which':
+                return 'SERE'
 
     def tag_stpr(self, word, word_index):
         """ Stranded preposition. Preposition followed by a punctuation mark.
         Update from Biber: can't be the word besides. E.g. the candidates I was thinking 'of',"""
-        pass
+        if not self.is_last_word_in_sentence(word_index):
+            next_word = self.get_next_word(word_index)
+            if self.helper.is_adposition(word) and word['xpos'] == 'IN' and self.helper.is_punctuation(next_word):
+                return 'STPR'
 
     def tag_pin(self, word, word_index):
         """ Total prepositional phrases. Preposition 'to' is disambiguated from the infinitive marker to.
         Biber doesn't mention if he differentiates between the 2 """
-        pass
+        if self.helper.is_adposition(word) and word['xpos'] == 'IN':
+            return 'PIN'
 
     def tag_nomz(self, word, word_index):
-        """ Any noun ending in -tion, -ment, -ness, or -ity, plus the plural form. Use a stop list to avoid
-        erroneous tagging (e.g. city)."""
-        pass
+        """ Any noun ending in -tion, -ment, -ness. (TODO: Add -ity?)"""
+        if self.helper.is_noun(word) and (word['text'][-4:].lower() in ['tion', 'ment', 'ness'] or
+                                          word['text'][-5:].lower() in ['tions', 'ments'] or
+                                          word['text'][-6:].lower() == 'nesses'):
+            return 'NOMZ'
