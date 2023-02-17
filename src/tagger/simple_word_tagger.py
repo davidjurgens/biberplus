@@ -2,6 +2,8 @@ import inspect
 
 import numpy as np
 
+from tag_helper import TagHelper
+
 
 class SimpleWordTagger:
     def __init__(self, doc, patterns_dict):
@@ -14,6 +16,7 @@ class SimpleWordTagger:
         self.doc = doc
         self.words = list(doc.iter_words())
         self.patterns_dict = patterns_dict
+        self.helper = TagHelper()
         self.tagged_words = []
         self.word_lengths = []
         self.adverb_count = 0
@@ -40,7 +43,7 @@ class SimpleWordTagger:
         self.mean_word_length = np.array(self.word_lengths).mean()
 
     def update_doc_level_stats(self, word):
-        if self.is_adverb(word):
+        if self.helper.is_adverb(word):
             self.adverb_count += 1
 
         self.word_lengths.append(len(word['text']))
@@ -52,24 +55,13 @@ class SimpleWordTagger:
         if index + 1 < len(self.words):
             return self.words[index + 1].to_dict()
 
-    @staticmethod
-    def is_adverb(word):
-        return 'RB' in word['upos']
-
-    @staticmethod
-    def is_first_word_in_sentence(word):
-        return word['id'] == 1
-
     def is_last_word_in_sentence(self, word_index):
         next_word = self.get_next_word(word_index)
-        return word_index + 1 == len(self.words) or (next_word and self.is_first_word_in_sentence(next_word))
-
-    @staticmethod
-    def is_noun(word):
-        return word['upos'] == 'NOUN'
+        return word_index + 1 == len(self.words) or (next_word and self.helper.is_first_word(next_word))
 
     def tag_fpp1(self, word, word_index):
-        """ Any item of this list: I, me, us, my, we, our, myself, ourselves """
+        """ Any item of this list: I, me, us, my, we, our, myself, ourselves and their contractions.
+        Tokenizer separates contractionas """
         if word['text'].lower() in self.patterns_dict['first_person_pronouns']:
             return 'FPP1'
 
@@ -86,8 +78,7 @@ class SimpleWordTagger:
     def tag_pit(self, word, word_index):
         """ Any pronoun it. Although not specified in Biber (1988), the present program also tags its and
             itself as “Pronoun it”. """
-        if word['text'].lower() in self.patterns_dict['pronoun_it'] \
-                and word['xpos'] in ['PRP', 'PRP$', 'WP', 'WP$']:
+        if self.helper.is_pronoun(word) and word['text'].lower() in self.patterns_dict['pronoun_it']:
             return 'PIT'
 
     def tag_inpr(self, word, word_index):
@@ -98,8 +89,7 @@ class SimpleWordTagger:
 
     def tag_xxo(self, word, word_index):
         """ Analytic negation: word 'not' and to the item n’t_RB"""
-        # TODO: Revisit the definition
-        if word['text'].lower() == 'not' or (word['xpos'] == 'RB' and word['text'][-3:].lower() == "n't"):
+        if word['text'].lower() in self.patterns_dict['analytic_negation']:
             return 'XXO'
 
     def tag_syne(self, word, word_index):
@@ -107,13 +97,14 @@ class SimpleWordTagger:
         if not self.is_last_word_in_sentence(word_index):
             next_word = self.get_next_word(word_index)
             if next_word:
-                if word['text'].lower() in self.patterns_dict['synthetic_negations'] and \
-                        next_word['xpos'] in ['JJ', 'JJR', 'JJS', 'NN', 'NNS', 'NNP', 'NNPS', 'PRP', 'PRP$']:
+                if word['text'].lower() in self.patterns_dict['synthetic_negations'] and (
+                        self.helper.is_adjective(next_word) or self.helper.is_noun(next_word)
+                        or self.helper.is_proper_noun(word)):
                     return 'SYNE'
 
     def tag_place(self, word, word_index):
         """ Any item in the place adverbials list that is not a proper noun (NNP) """
-        if word['text'].lower() in self.patterns_dict['place_adverbials'] and word['xpos'] != "NNP":
+        if word['text'].lower() in self.patterns_dict['place_adverbials'] and not self.helper.is_proper_noun(word):
             return 'PLACE'
 
     def tag_pubv(self, word, word_index):
@@ -138,8 +129,8 @@ class SimpleWordTagger:
 
     def tag_cont(self, word, word_index):
         """ Any instance of apostrophe followed by a tagged word OR any instance of the item n’t """
-        if ("'" in word['text'] and not self.is_last_word_in_sentence(word_index)) or (
-                word['text'][-3:].lower() == "n't"):
+        if (word['text'][-3:].lower() == "n't"
+                or word['text'][0] == "'" and len(word['text']) > 1):
             return 'CONT'
 
     def tag_dwnt(self, word, word_index):
@@ -154,7 +145,7 @@ class SimpleWordTagger:
 
     def tag_rb(self, word, word_index):
         """ Any adverb i.e. POS tags RB, RBS, RBR, WRB"""
-        if word['xpos'] in ['RB', 'RBS', 'RBR', 'WRB']:
+        if self.helper.is_adverb(word):
             return 'RB'
 
     def tag_caus(self, word, word_index):
@@ -164,12 +155,12 @@ class SimpleWordTagger:
 
     def tag_conc(self, word, word_index):
         """ Any occurrence of the words although, though, tho """
-        if word['text'].lower() in ['although', 'though', 'tho']:
+        if word['text'].lower() in self.patterns_dict['concessive_adverbial_subordinators']:
             return 'CONC'
 
     def tag_cond(self, word, word_index):
         """ Any occurrence of the words if or unless"""
-        if word['text'].lower() in ['if', 'unless']:
+        if word['text'].lower() in self.patterns_dict['conditional_adverbial_subordinators']:
             return 'COND'
 
     def tag_vbd(self, word, word_index):
@@ -184,9 +175,10 @@ class SimpleWordTagger:
 
     def tag_dpar(self, word, word_index):
         """ Discourse particle: the words well, now, anyhow, anyways preceded by a punctuation mark """
-        if not self.is_first_word_in_sentence(word):
+        if not self.helper.is_first_word(word):
             prev_word = self.get_previous_word(word_index)
-            if word['text'].lower() in self.patterns_dict['discourse_particles'] and prev_word['upos'] == 'PUNC':
+            if self.helper.is_punctuation(prev_word) \
+                    and word['text'].lower() in self.patterns_dict['discourse_particles']:
                 return 'DPAR'
 
     def tag_pomd(self, word, word_index):
@@ -202,16 +194,18 @@ class SimpleWordTagger:
     def tag_conj(self, word, word_index):
         """ Conjucts finds any item in the conjucts list with preceding punctuation.
         Only the first word is tagged """
-        if not self.is_first_word_in_sentence(word):
+        if word['text'].lower() in self.patterns_dict['conjucts']:
+            return 'CONJ'
+
+        if not self.is_last_word_in_sentence(word):
             prev_word = self.get_previous_word(word_index)
-            if prev_word['upos'] == 'PUNC' and word['text'].lower() in self.patterns_dict['conjucts']:
+            if self.helper.is_punctuation(prev_word) and word['text'].lower() in ['altogether', 'rather']:
                 return 'CONJ'
 
     def tag_ger(self, word, word_index):
-        """ Gerunds with length >= 10 are nominal form (N) that ends in –ing or –ings """
-        if len(word['text']) >= 10 and \
-                (word['text'].lower()[-3:] == 'ing' or word['text'].lower()[-4:] == 'ings') and \
-                (self.is_noun(word)):
+        """ Gerunds with length > 10 are nominal form (N) that ends in –ing or –ings """
+        if len(word['text']) > 10 and self.helper.is_noun(word) and \
+                (word['text'].lower()[-3:] == 'ing' or word['text'].lower()[-4:] == 'ings'):
             return 'GER'
 
     def tag_vprt(self, word, word_index):
@@ -225,6 +219,7 @@ class SimpleWordTagger:
             if word['text'].lower() != 'soon':
                 return 'TIME'
 
+            # Handle the 'soon as' case
             if not self.is_last_word_in_sentence(word_index):
                 next_word = self.get_next_word(word_index)
                 if next_word and next_word['text'].lower() != 'as':
