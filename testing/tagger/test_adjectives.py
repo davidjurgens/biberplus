@@ -2,7 +2,7 @@ import unittest
 
 import stanza
 
-from src.tagger.simple_word_tagger import SimpleWordTagger
+from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
 
 
@@ -16,7 +16,7 @@ class TestAdjectiveFunctions(unittest.TestCase):
         doc = self.pipeline(
             'how to build those proofs . This film is reasonably good . '
             'The problem are two : Firstly , Clint')
-        tagger = SimpleWordTagger(doc, self.patterns_dict)
+        tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Good should be tagged as a PRED
         self.assertIn('PRED', tagger.tagged_words[10]['tags'])
