@@ -16,6 +16,7 @@ class WordTagger:
         """
         self.doc = doc
         self.words = list(doc.iter_words())
+        self.word_count = len(self.words)
         self.patterns_dict = patterns_dict
         self.helper = TagHelper()
         self.tagged_words = []
@@ -56,7 +57,25 @@ class WordTagger:
 
     def get_next_word(self, index):
         if index + 1 < len(self.words):
-            return self.words[index + 1].to_dict()
+            next_word = self.words[index + 1].to_dict()
+            next_word['tags'] = []
+            return next_word
+
+    def get_previous_n_words(self, index, n):
+        previous_n_words = []
+        if index - n > 0:
+            for i in range(index - n, index):
+                previous_n_words.append(self.tagged_words[i])
+            return previous_n_words
+
+    def get_next_n_words(self, index, n):
+        next_n_words = []
+        if index + n < len(self.words):
+            for i in range(index + 1, index + n + 1):
+                next_word = self.words[i].to_dict()
+                next_word['tags'] = []
+                next_n_words.append(next_word)
+        return next_n_words
 
     def is_last_word_in_sentence(self, word_index):
         next_word = self.get_next_word(word_index)
@@ -253,7 +272,13 @@ class WordTagger:
     def tag_pastp(self, word, word_index):
         """ Past partcipial clauses: punctuation followed by VBN -> PIN or RB
          e.g. 'Built' in a single week, the house would stand for fifty years"""
-        pass
+        if word_index > 0 and not self.is_last_word_in_sentence(word_index):
+            prev_word = self.get_previous_word(word_index)
+            next_word = self.get_next_word(word_index)
+            is_pin = self.tag_pin(next_word, word_index + 1)
+            if self.helper.is_punctuation(prev_word) and word['upos'] == 'VBN' and (
+                    next_word['upos'] == 'RB' or is_pin):
+                return "PASTP"
 
     def tag_wzpast(self, word, word_index):
         """ Past participial WHIZ deletion relatives: a noun (N) or quantifier pronoun (QUPR) followed by a
@@ -284,12 +309,19 @@ class WordTagger:
         """ Be as main verb (BEMA): BE followed by a (DT), (PRP$) or a (PIN) or an adjective (JJ). Modified from
         the original algorithm to take adverbs and negations into account. Also no double coding
         with existential there """
-        pass
+        if word['text'].lower() == 'be':
+            if not self.is_last_word_in_sentence(word_index):
+                next_word = self.get_next_word(word_index)
+                is_pin = self.tag_pin(next_word, word_index + 1)
+                if next_word['upos'] in ['DT', 'PRP$', 'JJ'] or is_pin:
+                    return 'BEMA'
 
     def tag_pire(self, word, word_index):
-        """ Pied-piping relatives clauses """
-
-        pass
+        """ Pied-piping relatives clauses. Any preposition (PIN) followed by whom, who, whose or which """
+        if 'PIN' in word['tags'] and not self.is_last_word_in_sentence(word_index):
+            next_word = self.get_next_word(word_index)
+            if next_word['text'].lower() in ['whom', 'who', 'whose', 'which']:
+                return 'PIRE'
 
     def tag_osub(self, word, word_index):
         """ Other adverbial subordinators. Any occurrence of the OSUB words. For multi-word units only tag the first """
@@ -345,10 +377,19 @@ class WordTagger:
             return 'NOMZ'
 
     def tag_tsub(self, word, word_index):
-        """ That relative clauses on subject position: that  preceded by a noun (N) and followed by an
+        """ That relative clauses on subject position: that preceded by a noun (N) and followed by an
         auxiliary verb or a verb (V), with the possibility of an intervening adverb (RB) or negation (XX0)
         e.g. the dog 'that bit me' """
-        pass
+        if word['text'].lower() == 'that' and word_index > 0 and not self.is_last_word_in_sentence(word_index):
+            prev_word = self.get_previous_word(word_index)
+            next_word = self.get_next_word(word_index)
+            if self.helper.is_noun(prev_word) and self.helper.is_verb(next_word):
+                return "TSUB"
+
+            # Allow for intervening RB or XXO
+            next_2_words = self.get_next_n_words(word_index, 2)
+            if next_2_words and self.tag_xxo(next_2_words[0], word_index + 1) and self.helper.is_verb(next_2_words[1]):
+                return "TSUB"
 
     def tag_demp(self, word, word_index):
         """ The program tags as demonstrative pronouns the words those, this, these when they are
@@ -363,7 +404,14 @@ class WordTagger:
     def tag_whcl(self, word, word_index):
         """ WH-clauses. any public, private or suasive verb followed by any WH word, followed by a word that is
         NOT an auxiliary (tag MD for modal verbs, or a form of DO, or a form of HAVE, or a form of BE)."""
-        pass
+
+        if word['upos'][0] == 'W' and word_index > 0:
+            prev_word = self.get_previous_word(word_index)
+            if self.tag_pubv(prev_word, word_index - 1) or self.tag_priv(prev_word, word_index - 1) or self.tag_suav(
+                    prev_word, word_index - 1):
+                next_word = self.get_next_word(word_index)
+                if next_word and not self.helper.is_auxiliary(next_word):
+                    return "WHCL"
 
     def tag_whsub(self, word, word_index):
         """ WH relative clauses on subject position. Any word that is NOT a form of the
@@ -417,7 +465,10 @@ class WordTagger:
     def tag_spau(self, word, word_index):
         """ Split auxiliaries. Auxiliary (any modal verb MD, or any form of DO, or any form of BE, or any
         form of HAVE) is followed by one or two adverbs and a verb base form"""
-        pass
+        if self.helper.is_auxiliary(word) and not self.is_last_word_in_sentence(word_index):
+            next_word = self.get_next_word(word_index)
+            if self.helper.is_adverb(next_word):
+                pass
 
     def tag_prod(self, word, word_index):
         """ Pro-verb do. Any form of DO that is used as main verb and, therefore, excluding DO when used as
@@ -426,7 +477,6 @@ class WordTagger:
         a verb (V); (b) DO preceded by a punctuation mark or a WH pronoun (the list of WH pronouns
         is in Biber (1988))"""
         pass
-
 
     def tag_pred(self, word, word_index):
         """ Predicative adjectives. Any form of BE followed by an adjective (JJ) followed by a word that is NOT
@@ -444,7 +494,6 @@ class WordTagger:
         for intervening adverbs or negations. """
         pass
 
-
     def tag_andc(self, word, word_index):
         """ Independent clause coordination. Assigned to the word and when it is found in one of the following
          patterns: (1) preceded by a comma and followed by it, so, then, you, there + BE, or a demonstrative pronoun
@@ -455,9 +504,9 @@ class WordTagger:
 
     def tag_hdg(self, word, word_index):
         """ Hedges. Any hedge token. In cases of multi-word units such as more or less, only the first word is
-        tagged as HDG. For the terms sort of and kind of hese two items must be preceded by a determiner (DT),
+        tagged as HDG. For the terms sort of and kind of these two items must be preceded by a determiner (DT),
         a quantifier (QUAN), a cardinal number (CD), an adjective (JJ or PRED), a possessive pronouns (PRP$) or
-        WH word (see entry on WH-questions """
+        WH word (see entry on WH-questions) """
         pass
 
     def tag_emph(self, word, word_index):
@@ -474,12 +523,18 @@ class WordTagger:
     def tag_demo(self, word, word_index):
         """ Demonstratives. words that, this, these, those have not been
         tagged as either DEMP, TOBJ, TSUB, THAC, or THVC"""
-        pass
+        if word['text'].lower() in self.patterns_dict['demonstratives']:
+            if not ('DEMP' in word['tags'] or 'TOBJ' in word['tags'] or 'TSUB' in word['tags'] or 'THAC' in word[
+                'tags'] or 'THVC' in word['tags']):
+                return "DEMO"
 
     def tag_bypa(self, word, word_index):
         """ By-passives. PASS are found and the preposition by follows it"""
         pass
 
     def tag_thac(self, word, word_index):
-        """ That adjective complements """
-        pass
+        """ That adjective complements. That preceded by an adjective (JJ or a predicative adjective, PRED)."""
+        if word['text'].lower() == 'that' and word_index > 0:
+            prev_word = self.get_previous_word(word_index)
+            if self.tag_pred(prev_word, word_index - 1) or self.helper.is_adjective(prev_word):
+                return "THAC"

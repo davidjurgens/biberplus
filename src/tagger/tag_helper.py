@@ -79,3 +79,15 @@ class TagHelper:
     @staticmethod
     def is_future_tense(word):
         return "Tense=Past"
+
+    @staticmethod
+    def is_quantifier(word, patterns_dict):
+        return word['text'].lower() in patterns_dict['quantifiers']
+
+    @staticmethod
+    def is_indefinite_pronoun(word, patterns_dict):
+        return word['text'].lower() in patterns_dict['indefinite_pronouns']
+
+    @staticmethod
+    def is_quantifier_pronoun(word, patterns_dict):
+        return word['text'].lower() in patterns_dict['quantifier_pronouns']

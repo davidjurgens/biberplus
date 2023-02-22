@@ -13,11 +13,11 @@ class TestDocTaggerFunctions(unittest.TestCase):
         self.patterns_dict = build_variable_dictionaries()
 
     def test_word_count(self):
-        doc = self.pipeline("I 've read a few of these reviews and think that Fisher Price "
+        doc = self.pipeline("I've read a few of these reviews and think that Fisher Price "
                             "must have a quality control issue .")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        self.assertEqual(len(tagger.words), 20)
+        self.assertEqual(tagger.word_count, 20)
 
     def test_mean_word_length(self):
         doc = self.pipeline("This is a simple test of words")
