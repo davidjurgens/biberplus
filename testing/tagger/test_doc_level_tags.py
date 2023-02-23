@@ -23,10 +23,13 @@ class TestDocTaggerFunctions(unittest.TestCase):
         doc = self.pipeline("This is a simple test of words")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        self.assertEqual(round(tagger.mean_word_length, 2), 3.57)
+        self.assertEqual(round(tagger.mean_word_length, 2), 3.43)
 
     def test_total_adverbs(self):
-        self.assertEqual(True, False)  # add assertion here
+        doc = self.pipeline("I quickly and intentionally came up with this example")
+        tagger = WordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        self.assertEqual(tagger.adverb_count, 2)
 
     def test_type_token_ratio(self):
         self.assertEqual(True, False)  # add assertion here
