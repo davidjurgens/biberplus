@@ -305,28 +305,27 @@ class WordTagger:
         """ Agentless passives are tagged for 2 patterns. First, any form BE + 1-2 optional RBs + (VBD|VBN).
         Second any form BE + nominal form (noun|pronoun) + (VBN). Following original Biber which does not allow
         for intervening negation in this pattern"""
-        if word['xpos'] in ['VBN', 'VBD']:
+        if word['text'].lower() in self.patterns_dict['be']:
             # Case of BE + VBN/VBD
-            prev_word = self.get_previous_word(word_index)
-            if prev_word and prev_word['text'].lower() in self.patterns_dict['be']:
+            next_word = self.get_next_word(word_index)
+            if next_word and next_word['xpos'] in ['VBN', 'VBD']:
                 return "PASS"
 
-            previous_2_words = self.get_previous_n_words(word_index, n=2)
-            if previous_2_words:
+            next_2_words = self.get_next_n_words(word_index, n=2)
+            if next_2_words:
                 # Case of BE + (ADV) + VBN/VBD
-                if previous_2_words[0]['text'].lower() in self.patterns_dict['be'] and self.helper.is_adverb(
-                        previous_2_words[1]):
+                if self.helper.is_adverb(next_2_words[0]) and next_2_words[1]['xpos'] in ['VBN', 'VBD']:
                     return "PASS"
 
                 # Case of BE + N/PRO + VBN/VBD
-                if previous_2_words[0]['text'].lower() in self.patterns_dict['be'] and \
-                        (self.helper.is_noun(previous_2_words[1] or self.helper.is_pronoun(previous_2_words[1]))):
+                if (self.helper.is_noun(next_2_words[0]) or self.helper.is_pronoun(next_2_words[0])) and \
+                        next_2_words[1]['xpos'] in ['VBN', 'VBD']:
                     return "PASS"
 
             # Case of BE + (ADV) + (ADV) + VBN/VBD
-            previous_3_words = self.get_previous_n_words(word_index, n=3)
-            if previous_3_words and previous_2_words[0]['text'].lower() in self.patterns_dict[
-                'be'] and self.helper.is_adverb(previous_3_words[1]) and self.helper.is_adverb(previous_3_words[2]):
+            next_3_words = self.get_next_n_words(word_index, n=3)
+            if next_3_words and self.helper.is_adverb(next_3_words[0]) and self.helper.is_adverb(next_3_words[1]) and \
+                    next_3_words[2]['xpos'] in ['VBN', 'VBD']:
                 return "PASS"
 
     def tag_jj(self, word, word_index):
@@ -647,8 +646,6 @@ class WordTagger:
                 if prev_2_words and self.helper.is_punctuation(prev_2_words[0]):
                     return "WHQU"
 
-        pass
-
     def tag_demo(self, word, word_index):
         """ Demonstratives. words that, this, these, those have not been
         tagged as either DEMP, TOBJ, TSUB, THAC, or THVC"""
@@ -659,7 +656,22 @@ class WordTagger:
 
     def tag_bypa(self, word, word_index):
         """ By-passives. PASS are found and the preposition by follows it"""
-        pass
+        if word['text'].lower() == 'by':
+            # The passive can lag behind by 2-4 words
+            previous_2_words = self.get_previous_n_words(word_index, n=2)
+            if previous_2_words and (self.tag_pass(previous_2_words[0], word_index - 2) or self.tag_pass(previous_2_words[1], word_index - 1)):
+                return "BYPA"
+
+            previous_3_words = self.get_previous_n_words(word_index, n=3)
+            if previous_3_words and (
+                    self.tag_pass(previous_3_words[0], word_index - 3) or self.tag_pass(previous_3_words[1],
+                                                                                        word_index - 2)):
+                return "BYPA"
+            previous_4_words = self.get_previous_n_words(word_index, n=4)
+            if previous_4_words and (
+                    self.tag_pass(previous_4_words[0], word_index - 4) or self.tag_pass(previous_4_words[1],
+                                                                                        word_index - 3)):
+                return "BYPA"
 
     def tag_thac(self, word, word_index):
         """ That adjective complements. That preceded by an adjective (JJ or a predicative adjective, PRED)."""
