@@ -492,13 +492,13 @@ class WordTagger:
         pass
 
     def tag_thatd(self, word, word_index):
-        """ Subordinator that deletion. A public, private or suasive verb followed by a demonstrative
-        pronoun (DEMP) or a subject form of a personal pronoun; 2) a public, private or suasive verb is
-        followed by a pronoun (PRP) or a noun (N) and then by a verb (V) or auxiliary verb; (3) a
-        public, private or suasive verb is followed by an adjective (JJ or PRED), an adverb (RB),
+        """ Subordinator that deletion.
+        1) A public, private or suasive verb followed by (DEMP) or a subject form of a personal pronoun;
+        2) a public, private or suasive verb is followed by a pronoun or noun (N) and then by a verb or auxiliary verb;
+        (3) a public, private or suasive verb is followed by an adjective (JJ or PRED), an adverb (RB),
         a determiner (DT, QUAN, CD) or a possessive pronoun (PRP$) and then a noun (N) and then a verb or
         auxiliary verb, with the possibility of an intervening adjective (JJ or PRED) between the noun and
-        ts preceding word """
+        its preceding word """
         pass
 
     def tag_spin(self, word, word_index):
@@ -584,13 +584,53 @@ class WordTagger:
         tagged as HDG. For the terms sort of and kind of these two items must be preceded by a determiner (DT),
         a quantifier (QUAN), a cardinal number (CD), an adjective (JJ or PRED), a possessive pronouns (PRP$) or
         WH word (see entry on WH-questions) """
-        pass
+        # One word hedges
+        if word['text'].lower() in self.patterns_dict['hedges']:
+            return "HDG"
+
+        # Two word hedges
+        next_word = self.get_next_word(word_index)
+        if next_word:
+            phrase = " ".join([word['text'].lower(), next_word['text'].lower()])
+            # Handle kind of / sort of case
+            if phrase in ['kind of', 'sort of']:
+                prev_word = self.get_previous_word(word_index)
+                if prev_word and (prev_word['xpos'] in ['DT', 'CD', 'PRP$'] or prev_word['xpos'][0] == 'W' or
+                                  self.helper.is_quantifier(word, self.patterns_dict) or self.helper.is_adjective(
+                            prev_word)):
+                    return "HDG"
+            elif phrase in self.patterns_dict['hedges']:
+                return "HDG"
+
+        # Three word hedges
+        next_2_words = self.get_next_n_words(word_index, n=2)
+        if next_2_words:
+            phrase = " ".join([word['text'].lower(), next_2_words[0]['text'].lower(), next_2_words[1]['text'].lower()])
+            if phrase in self.patterns_dict['hedges']:
+                return "HDG"
 
     def tag_emph(self, word, word_index):
         """ Emphatics. Any word in the emphatics list and real+adjective, so+adjective, any form of DO followed
         by a verb, for sure, a lot, such a. In cases of multi- word units such as a lot,
         only the first word is tagged """
-        pass
+        # One word emphatics
+        if word['text'].lower() in self.patterns_dict['emphatics']:
+            return "EMPH"
+
+        # Two word emphatics
+        next_word = self.get_next_word(word_index)
+        if next_word:
+            phrase = " ".join([word['text'].lower(), next_word['text'].lower()])
+            if phrase in self.patterns_dict['emphatics']:
+                return "EMPH"
+
+            # Handle (real + adjective) and (so + adjective)
+            if word['text'].lower() in ['real', 'so'] and self.helper.is_adjective(next_word):
+                return "EMPH"
+
+            # DO form + verb
+            if word['text'].lower() in self.patterns_dict['do'] and self.helper.is_verb(next_word):
+                return "EMPH"
 
     def tag_whqu(self, word, word_index):
         """ Direct WH-questions. Punctuation + WH word + auxillary verb. Slightly modified to allow

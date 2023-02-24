@@ -41,7 +41,7 @@ class TestDownTonersAmpsFunctions(unittest.TestCase):
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Such should be tagged as a EMPH
-        self.assertIn('EMPH', tagger.tagged_words[1]['tags'])
+        self.assertIn('EMPH', tagger.tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':
