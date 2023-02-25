@@ -2,8 +2,8 @@ import unittest
 
 import stanza
 
-from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
+from src.tagger.word_tagger import WordTagger
 
 
 class TestVerbFunctions(unittest.TestCase):

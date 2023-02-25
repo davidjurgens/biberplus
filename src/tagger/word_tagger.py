@@ -238,14 +238,13 @@ class WordTagger:
     def tag_time(self, word, word_index):
         """ Time adverbials with the exception: soon is not a time adverbial if it is followed by the word as """
         if word['text'].lower() in self.patterns_dict['time_adverbials']:
-            if word['text'].lower() != 'soon':
-                return 'TIME'
+            return 'TIME'
 
-            # Handle the 'soon as' case
-            if not self.is_last_word_in_sentence(word_index):
-                next_word = self.get_next_word(word_index)
-                if next_word and next_word['text'].lower() != 'as':
-                    return 'TIME'
+        # Handle the 'soon as' case
+        if word['text'].lower() == 'soon':
+            next_word = self.get_next_word(word_index)
+            if next_word and next_word['text'].lower() != 'as':
+                return 'TIME'
 
     def tag_to(self, word, word_index):
         """ Infinitives: POS tag TO that are not a preposition """
@@ -262,35 +261,37 @@ class WordTagger:
         """ Present participial clauses: a punctuation mark is followed by a present participial
         form of a verb (VBG) followed by a preposition (PIN), a determiner (DT, QUAN, CD), a WH pronoun,
         a WH possessive pronoun (WP$), any WH word, any pronoun (PRP) or any adverb (RB)-"""
-        if word_index > 0 and not self.is_last_word_in_sentence(word_index):
+        if word['xpos'] == 'VBG':
             prev_word = self.get_previous_word(word_index)
             next_word = self.get_next_word(word_index)
-            if self.helper.is_punctuation(prev_word) and word['xpos'] == 'VBG':
-                if (self.helper.is_adposition(next_word) and next_word['xpos'] == 'IN') or \
-                        next_word['xpos'] in ['DT', 'QUAN', 'CD', 'WH', 'WP', 'WP$', 'PRP', 'RB']:
+            if prev_word and next_word and self.helper.is_punctuation(prev_word):
+                if (self.tag_pin(next_word, word_index + 1)) or \
+                        next_word['xpos'] in ['DT', 'QUAN', 'CD', 'WH', 'WP', 'WP$', 'PRP', 'RB', 'WRB']:
                     return 'PRESP'
 
     def tag_pastp(self, word, word_index):
         """ Past partcipial clauses: punctuation followed by VBN -> PIN or RB
          e.g. 'Built' in a single week, the house would stand for fifty years"""
-        if word_index > 0 and not self.is_last_word_in_sentence(word_index):
+        if word['xpos'] == 'VBN':
             prev_word = self.get_previous_word(word_index)
             next_word = self.get_next_word(word_index)
-            is_pin = self.tag_pin(next_word, word_index + 1)
-            if self.helper.is_punctuation(prev_word) and word['xpos'] == 'VBN' and (
-                    next_word['xpos'] == 'RB' or is_pin):
-                return "PASTP"
+            if next_word:
+                is_pin = self.tag_pin(next_word, word_index + 1)
+                if prev_word and self.helper.is_punctuation(prev_word) \
+                        and (next_word['xpos'] == 'RB' or is_pin):
+                    return "PASTP"
 
     def tag_wzpast(self, word, word_index):
         """ Past participial WHIZ deletion relatives: a noun (N) or quantifier pronoun (QUPR) followed by a
         past participial form of a verb (VBN) followed by a preposition (PIN) or an adverb (RB) or a form of BE.
         e.g. The solution 'produced' by this process """
-        if self.helper.is_noun(word) or self.helper.is_quantifier_pronoun(word, self.patterns_dict):
-            next_2_words = self.get_next_n_words(word_index, n=2)
-            if next_2_words:
-                if next_2_words[0]['xpos'] == 'VBN' and (
-                        self.tag_pin(next_2_words[1], word_index + 2) or self.helper.is_adverb(next_2_words[1]) or
-                        next_2_words[1]['text'].lower() in self.patterns_dict['be']):
+        if word['xpos'] == 'VBN':
+            prev_word = self.get_previous_word(word_index)
+            if prev_word and (self.helper.is_noun(prev_word) or
+                              self.helper.is_quantifier_pronoun(prev_word, self.patterns_dict)):
+                next_word = self.get_next_word(word_index)
+                if next_word and (self.tag_pin(next_word, word_index + 1) or
+                                  self.helper.is_adverb(next_word) or word['text'].lower() in self.patterns_dict['be']):
                     return "WZPAST"
 
     def tag_wzpres(self, word, word_index):
@@ -343,12 +344,12 @@ class WordTagger:
                 return 'BEMA'
             # BE + (Adverb|Negation) + ...
             next_2_words = self.get_next_n_words(word_index, n=2)
-            is_pin = self.tag_pin(next_2_words[1], word_index + 2)
-            if next_2_words and (self.helper.is_adverb(next_2_words[0])
-                                 or self.tag_xxo(next_2_words[0], word_index + 1)
-                                 or self.tag_syne(next_2_words[0], word_index + 1)) \
-                    and (next_2_words[1]['xpos'] in ['DT', 'PRP$', 'JJ'] or is_pin):
-                return 'BEMA'
+            if next_2_words:
+                is_pin = self.tag_pin(next_2_words[1], word_index + 2)
+                if (self.helper.is_adverb(next_2_words[0]) or
+                    self.is_negation(next_2_words[0], word_index + 1)) \
+                        and (next_2_words[1]['xpos'] in ['DT', 'PRP$', 'JJ'] or is_pin):
+                    return 'BEMA'
 
     def tag_pire(self, word, word_index):
         """ Pied-piping relatives clauses. Any preposition (PIN) followed by whom, who, whose or which """
@@ -372,8 +373,8 @@ class WordTagger:
                 next_word = self.get_next_word(word_index)
                 if prev_word['upos'] == next_word['upos']:
                     if self.helper.is_adverb(prev_word) or self.helper.is_adjective(prev_word) or \
-                            self.helper.is_verb(prev_word) or self.helper.is_noun(
-                        prev_word) or self.helper.is_proper_noun(prev_word):
+                            self.helper.is_verb(prev_word) or \
+                            self.helper.is_noun(prev_word) or self.helper.is_proper_noun(prev_word):
                         return "PHC"
 
     def tag_prmd(self, word, word_index):
@@ -392,15 +393,14 @@ class WordTagger:
     def tag_stpr(self, word, word_index):
         """ Stranded preposition. Preposition followed by a punctuation mark.
         Update from Biber: can't be the word besides. E.g. the candidates I was thinking 'of',"""
-        if not self.is_last_word_in_sentence(word_index):
+        if word['text'].lower() in self.patterns_dict['prepositional_phrases'] and word['text'].lower() != 'besides':
             next_word = self.get_next_word(word_index)
-            if self.helper.is_adposition(word) and word['xpos'] == 'IN' and self.helper.is_punctuation(next_word):
-                return 'STPR'
+            if next_word and self.helper.is_punctuation(next_word):
+                return "STPR"
 
     def tag_pin(self, word, word_index):
-        """ Total prepositional phrases. Preposition 'to' is disambiguated from the infinitive marker to.
-        Biber doesn't mention if he differentiates between the 2 """
-        if self.helper.is_adposition(word) and word['xpos'] == 'IN':
+        """ Total prepositional phrases """
+        if word['text'].lower() in self.patterns_dict['prepositional_phrases']:
             return 'PIN'
 
     def tag_nomz(self, word, word_index):
@@ -462,9 +462,10 @@ class WordTagger:
         pass
 
     def tag_whobj(self, word, word_index):
-        """ WH relative clauses on object position. Any word that is NOT a form of the words ASK or TELL followed by any word, followed by a
-        noun (N), followed by any word that is NOT an adverb (RB), a negation (XX0) , a verb or an auxiliary
-        verb (MD, forms of HAVE, BE or DO) e.g. the man who Sally likes """
+        """ WH relative clauses on object position. Any word that is NOT a form of the words ASK or TELL followed by
+        any word, followed by a noun (N), followed by any word that is NOT an adverb (RB), a negation (XX0),
+        a verb or an auxiliary verb (MD, forms of HAVE, BE or DO)
+        e.g. the man who Sally likes """
         pass
 
     def tag_nn(self, word, word_index):
@@ -518,6 +519,7 @@ class WordTagger:
     def tag_spau(self, word, word_index):
         """ Split auxiliaries. Auxiliary (any modal verb MD, or any form of DO, or any form of BE, or any
         form of HAVE) is followed by one or two adverbs and a verb base form"""
+        # Note the existing tagger also uses VBN in addition to verb base form
         if self.helper.is_auxiliary(word):
             # AUX + 1 adverb + VB
             next_2_words = self.get_next_n_words(word_index, n=2)
@@ -557,9 +559,25 @@ class WordTagger:
     def tag_pred(self, word, word_index):
         """ Predicative adjectives. Any form of BE followed by an adjective (JJ) followed by a word that is NOT
         another adjective, an adverb (RB) or a noun (N). If any adverb or negation is intervening between the
-        adjective and the word after it, the tag is still assigned. An adjective is tagged as predicative if it is
+        adjective and the word after it, the tag is still assigned.
+        An adjective is tagged as predicative if it is
         preceded by another predicative adjective followed by a phrasal coordinator e.g. the horse is big and fast """
-        pass
+        prev_word = self.get_previous_word(word_index)
+        if prev_word and prev_word['text'].lower() in self.patterns_dict['be'] and self.helper.is_adjective(word):
+            next_word = self.get_next_word(word_index)
+            if next_word and not (self.helper.is_adverb(next_word) or self.helper.is_noun(next_word)):
+                return "PRED"
+            # Allow for intervening negation/adverb
+            next_2_words = self.get_next_n_words(word_index, n=2)
+            if next_2_words and (self.is_negation(next_2_words[0], word_index + 1)
+                                 or self.helper.is_adverb(next_2_words[0])) \
+                    and not (self.helper.is_adjective(next_2_words[1]) or self.helper.is_noun(next_2_words[1])):
+                return "PRED"
+
+        # Handle phrasal coordinator case
+        if self.helper.is_adjective(word):
+            if prev_word and self.tag_phc(prev_word, word_index - 1):
+                return "PRED"
 
     def tag_peas(self, word, word_index):
         """ Perfect aspect. Calculated by counting how many times a form of HAVE is followed by: a VBD or VBN tag
@@ -572,11 +590,37 @@ class WordTagger:
 
     def tag_andc(self, word, word_index):
         """ Independent clause coordination. Assigned to the word and when it is found in one of the following
-         patterns: (1) preceded by a comma and followed by it, so, then, you, there + BE, or a demonstrative pronoun
-         (DEMP) or the subject forms of a personal pronouns; (2) preceded by any punctuation; (3) followed by a
-         WH pronoun or any WH word, an adverbial subordinator (CAUS, CONC, COND, OSUB) or a discourse particle (DPAR)
-         or a conjunct (CONJ)"""
-        pass
+         patterns:
+         (1) preceded by a comma and followed by it, so, then, you, there + BE, or a demonstrative pronoun
+         (DEMP) or the subject forms of a personal pronouns;
+         (2) preceded by any punctuation;
+         (3) followed by a WH pronoun or any WH word, an adverbial subordinator (CAUS, CONC, COND, OSUB) or a
+         discourse particle (DPAR) or a conjunct (CONJ)"""
+        if word['text'].lower() == 'and':
+            # Followed by WH word, CAUS, CONC, COND, OSUB, DPAR, CONJ
+            next_word = self.get_next_word(word_index)
+            if next_word and (next_word['xpos'][0] == 'W' or self.tag_caus(next_word, word_index + 1) or
+                              self.tag_conc(next_word, word_index + 1) or self.tag_cond(next_word, word_index + 1) or
+                              self.tag_osub(next_word, word_index + 1) or self.tag_dpar(next_word, word_index + 1) or
+                              self.tag_conj(next_word, word_index + 1)):
+                return "ANDC"
+            # Previous by any punctuation
+            prev_word = self.get_previous_word(word_index)
+            if prev_word and self.helper.is_punctuation(prev_word):
+                return "ANDC"
+            # Preceded by a comma
+            if prev_word and prev_word['text'] == ',':
+                # Followed by it, so, then, you or DEMP or personal pronouns
+                next_word = self.get_next_word(word_index)
+                if next_word and (next_word['text'] in ['it', 'so', 'then', 'you'] or
+                                  self.tag_demp(next_word, word_index + 1) or next_word['text'].lower() in
+                                  self.patterns_dict['subject_pronouns']):
+                    return "ANDC"
+                # Followed by there + BE
+                next_2_words = self.get_next_n_words(word_index, n=2)
+                if next_2_words and next_2_words[0] == 'there' and next_2_words[1]['text'].lower() in \
+                        self.patterns_dict['be']:
+                    return "ANDC"
 
     def tag_hdg(self, word, word_index):
         """ Hedges. Any hedge token. In cases of multi-word units such as more or less, only the first word is
@@ -659,7 +703,9 @@ class WordTagger:
         if word['text'].lower() == 'by':
             # The passive can lag behind by 2-4 words
             previous_2_words = self.get_previous_n_words(word_index, n=2)
-            if previous_2_words and (self.tag_pass(previous_2_words[0], word_index - 2) or self.tag_pass(previous_2_words[1], word_index - 1)):
+            if previous_2_words and (
+                    self.tag_pass(previous_2_words[0], word_index - 2) or self.tag_pass(previous_2_words[1],
+                                                                                        word_index - 1)):
                 return "BYPA"
 
             previous_3_words = self.get_previous_n_words(word_index, n=3)
@@ -679,3 +725,6 @@ class WordTagger:
             prev_word = self.get_previous_word(word_index)
             if self.tag_pred(prev_word, word_index - 1) or self.helper.is_adjective(prev_word):
                 return "THAC"
+
+    def is_negation(self, word, word_index):
+        return self.tag_syne(word, word_index) or self.tag_xxo(word, word_index)

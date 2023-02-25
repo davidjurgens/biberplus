@@ -2,8 +2,8 @@ import unittest
 
 import stanza
 
-from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
+from src.tagger.word_tagger import WordTagger
 
 
 class TestAllOtherFunctions(unittest.TestCase):
@@ -75,8 +75,8 @@ class TestAllOtherFunctions(unittest.TestCase):
         self.assertIn('SPIN', tagger.tagged_words[10]['tags'])
 
     def test_spau(self):
-        doc = self.pipeline('heard by Cosmo Topper , is the reason these films are so well liked . '
-                            'If this version of Topper')
+        doc = self.pipeline("portray her three narrators in distinct fashions so that we can easily follow "
+                            "when one stops and another begins .")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Are should be tagged as SPAU
