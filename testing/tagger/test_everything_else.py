@@ -82,6 +82,14 @@ class TestAllOtherFunctions(unittest.TestCase):
         # Are should be tagged as SPAU
         self.assertIn('SPAU', tagger.tagged_words[10]['tags'])
 
+    def test_peas(self):
+        doc = self.pipeline("the exchange , so far all my dealings with amazon have been easy and fair . "
+                            "Waterloo Station is a")
+        tagger = WordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # Have should be tagged as PEAS
+        self.assertIn('PEAS', tagger.tagged_words[10]['tags'])
+
 
 if __name__ == '__main__':
     unittest.main()

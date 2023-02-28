@@ -32,7 +32,11 @@ class TestDocTaggerFunctions(unittest.TestCase):
         self.assertEqual(tagger.adverb_count, 2)
 
     def test_type_token_ratio(self):
-        self.assertEqual(True, False)  # add assertion here
+        doc = self.pipeline("This is an example with repeated words. Words that occur more than once. "
+                            "This is a simple example")
+        tagger = WordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        self.assertEqual(tagger.ttr, 0.75)
 
 
 if __name__ == '__main__':

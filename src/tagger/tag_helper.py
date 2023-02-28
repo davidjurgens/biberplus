@@ -1,7 +1,7 @@
 class TagHelper:
 
-    def __init__(self, patterns_dict):
-        self.patterns_dict = patterns_dict
+    def __init__(self, patterns):
+        self.patterns = patterns
 
     @staticmethod
     def is_first_word(word):
@@ -88,10 +88,21 @@ class TagHelper:
         return "Tense=Past"
 
     def is_quantifier(self, word):
-        return word['text'].lower() in self.patterns_dict['quantifiers']
+        return word['text'].lower() in self.patterns['quantifiers']
 
     def is_indefinite_pronoun(self, word):
-        return word['text'].lower() in self.patterns_dict['indefinite_pronouns']
+        return word['text'].lower() in self.patterns['indefinite_pronouns']
 
     def is_quantifier_pronoun(self, word):
-        return word['text'].lower() in self.patterns_dict['quantifier_pronouns']
+        return word['text'].lower() in self.patterns['quantifier_pronouns']
+
+    def is_preposition(self, word):
+        return word['text'].lower() in self.patterns['prepositional_phrases']
+    def is_be(self, word):
+        return word['text'].lower() in self.patterns['be']
+
+    def is_do(self, word):
+        return word['text'].lower() in self.patterns['do']
+
+    def is_have(self, word):
+        return word['text'].lower() in self.patterns['have']
