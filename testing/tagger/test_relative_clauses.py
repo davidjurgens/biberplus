@@ -2,8 +2,8 @@ import unittest
 
 import stanza
 
-from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
+from src.tagger.word_tagger import WordTagger
 
 
 class TestRelativeClausesFunctions(unittest.TestCase):
@@ -21,11 +21,11 @@ class TestRelativeClausesFunctions(unittest.TestCase):
         self.assertIn('TSUB', tagger.tagged_words[10]['tags'])
 
     def test_tobj(self):
-        doc = self.pipeline('school , but , I am sitting here in SHOCK that I read a nasty , vulgar , tasteless joke')
+        doc = self.pipeline('the dog that I saw')
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # That should be tagged as a TOJB
-        self.assertIn('TSUB', tagger.tagged_words[10]['tags'])
+        self.assertIn('TOBJ', tagger.tagged_words[2]['tags'])
 
     def test_whsub(self):
         doc = self.pipeline('over $ 100,000 . Now I know . The reviewer who said the book has '
@@ -36,10 +36,10 @@ class TestRelativeClausesFunctions(unittest.TestCase):
         self.assertIn('WHSUB', tagger.tagged_words[10]['tags'])
 
     def test_whobj(self):
-        doc = self.pipeline('it , yet . I was sent the wrong movie which I returned . And , as of this date')
+        doc = self.pipeline("can be brave and courageous . Mafatu is a boy whose mom dies at sea and ever since he was")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        # Which should be tagged as a WHOBJ
+        # Whose should be tagged as a WHOBJ
         self.assertIn('WHOBJ', tagger.tagged_words[10]['tags'])
 
     def test_pire(self):

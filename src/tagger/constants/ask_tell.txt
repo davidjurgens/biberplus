@@ -1,0 +1,6 @@
+ask
+asks
+asked
+tell
+tells
+told

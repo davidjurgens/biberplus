@@ -1,5 +1,8 @@
 class TagHelper:
 
+    def __init__(self, patterns_dict):
+        self.patterns_dict = patterns_dict
+
     @staticmethod
     def is_first_word(word):
         return word['id'] == 1
@@ -77,17 +80,18 @@ class TagHelper:
         return "Tense=Fut" in word['feats']
 
     @staticmethod
+    def is_possesive_pronoun(word):
+        return word['upos'] == 'PRON' and 'feats' in word and 'Poss=Yes' in word['feats']
+
+    @staticmethod
     def is_future_tense(word):
         return "Tense=Past"
 
-    @staticmethod
-    def is_quantifier(word, patterns_dict):
-        return word['text'].lower() in patterns_dict['quantifiers']
+    def is_quantifier(self, word):
+        return word['text'].lower() in self.patterns_dict['quantifiers']
 
-    @staticmethod
-    def is_indefinite_pronoun(word, patterns_dict):
-        return word['text'].lower() in patterns_dict['indefinite_pronouns']
+    def is_indefinite_pronoun(self, word):
+        return word['text'].lower() in self.patterns_dict['indefinite_pronouns']
 
-    @staticmethod
-    def is_quantifier_pronoun(word, patterns_dict):
-        return word['text'].lower() in patterns_dict['quantifier_pronouns']
+    def is_quantifier_pronoun(self, word):
+        return word['text'].lower() in self.patterns_dict['quantifier_pronouns']

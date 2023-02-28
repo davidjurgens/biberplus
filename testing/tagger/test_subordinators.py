@@ -2,8 +2,8 @@ import unittest
 
 import stanza
 
-from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
+from src.tagger.word_tagger import WordTagger
 
 
 class TestSubordinatorsFunctions(unittest.TestCase):
@@ -44,11 +44,10 @@ class TestSubordinatorsFunctions(unittest.TestCase):
         self.assertIn('OSUB', tagger.tagged_words[10]['tags'])
 
     def test_thatd(self):
-        doc = self.pipeline('be as in depth in that area . I just found that this book helped tremendously '
-                            'in regards to its')
+        doc = self.pipeline("passes away and his wealth is gone ? Overall I thought this was a good book , it was n't")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        # Found should be tagged as THATD
+        # Though should be tagged as THATD
         self.assertIn('THATD', tagger.tagged_words[10]['tags'])
 
 
