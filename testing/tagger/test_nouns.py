@@ -20,12 +20,12 @@ class TestNounFunctions(unittest.TestCase):
         self.assertIn('FPP1', tagger.tagged_words[10]['tags'])
 
     def test_spp2(self):
-        doc = self.pipeline(
-            'one of the most extraordinary views in Rome . If you look through the keyhole , you will see an')
+        doc = self.pipeline(". . -RRB- The new interpretation makes sense though if you think about it . "
+                            "By the way , he")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # You should be tagged as a SPP2
-        self.assertIn('SPP2', tagger.tagged_words[10]['tags'])
+        self.assertIn('SPP2', tagger.tagged_words[12]['tags'])
 
     def test_tpp3(self):
         doc = self.pipeline(

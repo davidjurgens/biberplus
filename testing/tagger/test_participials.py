@@ -42,7 +42,7 @@ class TesParticipialFunctions(unittest.TestCase):
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Disintegrating should be tagged as WZPAST
-        self.assertIn('WZPREZ', tagger.tagged_words[10]['tags'])
+        self.assertIn('WZPRES', tagger.tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':

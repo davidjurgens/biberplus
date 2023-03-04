@@ -13,20 +13,19 @@ class TestNegationFunctions(unittest.TestCase):
         self.patterns_dict = build_variable_dictionaries()
 
     def test_syne(self):
-        doc = self.pipeline('small fortune on a search for him but had made no provision '
-                            'for him in her will if he should')
+        doc = self.pipeline("I did n't even want to give it away . No Beatrix Potter appreciator should "
+                            "be exposed to this ;")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        # No should be tagged as a SYNE
         self.assertIn('SYNE', tagger.tagged_words[10]['tags'])
 
-    def test_xxo(self):
+    def test_xx0(self):
         doc = self.pipeline(', and General Motors on the other . It is not a medieval mental quirk '
                             'or an attitude `` unnourished')
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Not should be tagged as a XXO
-        self.assertIn('XXO', tagger.tagged_words[10]['tags'])
+        self.assertIn('XX0', tagger.tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':

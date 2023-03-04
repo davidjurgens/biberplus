@@ -28,11 +28,11 @@ class TestRelativeClausesFunctions(unittest.TestCase):
         self.assertIn('TOBJ', tagger.tagged_words[2]['tags'])
 
     def test_whsub(self):
-        doc = self.pipeline('over $ 100,000 . Now I know . The reviewer who said the book has '
-                            'nothing to do with Seattle')
+        doc = self.pipeline('. There are plenty of reference mentioned at the end which can be followed up '
+                            'for more curiosity . Must')
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        # Who should be tagged as a WHSUB
+        # Which should be tagged as a WHSUB
         self.assertIn('WHSUB', tagger.tagged_words[10]['tags'])
 
     def test_whobj(self):
@@ -48,7 +48,7 @@ class TestRelativeClausesFunctions(unittest.TestCase):
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Whose should be tagged as a PIRE
-        self.assertIn('PIRE', tagger.tagged_words[10]['tags'])
+        self.assertIn('PIRE', tagger.tagged_words[11]['tags'])
 
     def test_sere(self):
         doc = self.pipeline('does not stop until you put the book down , which you will not do '

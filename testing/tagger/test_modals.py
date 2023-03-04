@@ -35,6 +35,13 @@ class TestModalFunctions(unittest.TestCase):
         # Would should be tagged as a PRMD
         self.assertIn('PRMD', tagger.tagged_words[10]['tags'])
 
+    def test_dpar(self):
+        doc = self.pipeline("were and because we all wanted to be thin . Now , as a woman in her middle 30 's")
+        tagger = WordTagger(doc, self.patterns_dict)
+        tagger.run_all()
+        # Now should be tagged as a DPAR
+        self.assertIn('DPAR', tagger.tagged_words[10]['tags'])
+
 
 if __name__ == '__main__':
     unittest.main()

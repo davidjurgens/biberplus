@@ -24,8 +24,8 @@ class TestPassiveFunctions(unittest.TestCase):
                             'the Greeks ... a time during which')
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        # By should be tagged as a BYPA
-        self.assertIn('BYPA', tagger.tagged_words[12]['tags'])
+        # onquered should be tagged as a BYPA
+        self.assertIn('BYPA', tagger.tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':
