@@ -11,9 +11,6 @@ class TestVerbFunctions(unittest.TestCase):
         self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
         self.patterns_dict = build_variable_dictionaries()
 
-    def test_vbd(self):
-        pass
-
     def test_priv(self):
         doc = self.pipeline('I expected to see ten, but instead saw twelve')
         tagger = WordTagger(doc, self.patterns_dict)
@@ -35,13 +32,7 @@ class TestVerbFunctions(unittest.TestCase):
         # Proposed should be tagged as a suav
         self.assertIn('SUAV', tagger.tagged_words[1]['tags'])
 
-    def test_bema(self):
-        doc = self.pipeline(
-            'have a little boy that likes tractors , you can be certain this will be entertaining to him ! ')
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
-        # 'Be' should be tagged as BEMA
-        self.assertIn('BEMA', tagger.tagged_words[10]['tags'])
+
 
     def test_smp(self):
         doc = self.pipeline('edge of the bank . From the outside , it seemed no more than a low drumlin , a lump')

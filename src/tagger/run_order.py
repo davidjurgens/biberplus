@@ -4,9 +4,11 @@ Most of the order does not matter', but a few tags need to be run at the end bec
 """
 
 RUN_ORDER = [
+    'tag_quan',
+    'tag_qupr',
     'tag_amp',
     'tag_pass',
-    'tag_xxo',
+    'tag_xx0',
     'tag_jj',
     'tag_bema',
     'tag_caus',

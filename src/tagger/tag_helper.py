@@ -72,6 +72,13 @@ class TagHelper:
         return word['upos'] == 'VERB'
 
     @staticmethod
+    def is_any_noun(word):
+        return word['xpos'][:2] == 'NN'
+    @staticmethod
+    def is_any_verb(word):
+        return word['upos'] == 'VERB' or word['upos'] == 'AUX'
+
+    @staticmethod
     def is_past_tense(word):
         return "Tense=Past" in word['feats']
 

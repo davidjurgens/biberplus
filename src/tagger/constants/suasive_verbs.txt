@@ -1,4 +1,5 @@
-agree agrees
+agree
+agrees
 agreeing
 agreed
 allow
