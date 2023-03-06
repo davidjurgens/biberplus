@@ -6,7 +6,7 @@ from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
 
 
-class TestAdverbialFunctions(unittest.TestCase):
+class TestPlaceTimeAdverbialFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
         self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)

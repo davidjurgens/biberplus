@@ -2,11 +2,11 @@ import unittest
 
 import stanza
 
-from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
+from src.tagger.word_tagger import WordTagger
 
 
-class TestPassiveFunctions(unittest.TestCase):
+class TestPassivesFunctions(unittest.TestCase):
     def setUp(self) -> None:
         self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
         self.patterns_dict = build_variable_dictionaries()

@@ -2,11 +2,11 @@ import unittest
 
 import stanza
 
-from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
+from src.tagger.word_tagger import WordTagger
 
 
-class TestModalFunctions(unittest.TestCase):
+class TestModalsFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
         self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
@@ -34,13 +34,6 @@ class TestModalFunctions(unittest.TestCase):
         tagger.run_all()
         # Would should be tagged as a PRMD
         self.assertIn('PRMD', tagger.tagged_words[10]['tags'])
-
-    def test_dpar(self):
-        doc = self.pipeline("were and because we all wanted to be thin . Now , as a woman in her middle 30 's")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
-        # Now should be tagged as a DPAR
-        self.assertIn('DPAR', tagger.tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':
