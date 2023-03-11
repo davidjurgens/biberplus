@@ -15,7 +15,7 @@ class WordTagger:
             :return:
         """
         self.doc = doc
-        self.words = list(doc.iter_words())
+        self.words = list(doc)
         self.word_count = len(self.words)
         self.patterns = patterns_dict
         self.helper = TagHelper(patterns_dict)
@@ -42,9 +42,7 @@ class WordTagger:
         tag_methods = sorted(tag_methods, key=lambda x: RUN_ORDER.index(x.__name__))
 
         for index, word in enumerate(self.words):
-            tagged_word = word.to_dict()
-            tagged_word['index'] = index
-            tagged_word['tags'] = []
+            tagged_word = self.word2dict(index)
 
             for tag_method in tag_methods:
                 tag = tag_method(tagged_word, index)
@@ -58,6 +56,10 @@ class WordTagger:
 
     """ Helper functions """
 
+    def word2dict(self, word_index):
+        word = self.words[word_index]
+        return {'text': word.text, 'upos': word.pos_, 'xpos': word.tag_, 'index': word_index, 'tags': []}
+
     def update_doc_level_stats(self, word):
         if self.helper.is_adverb(word):
             self.adverb_count += 1
@@ -66,11 +68,11 @@ class WordTagger:
 
     def get_previous_word(self, index):
         if index > 0:
-            return self.words[index - 1].to_dict()
+            return self.word2dict(index - 1)
 
     def get_next_word(self, index):
         if index + 1 < len(self.words):
-            next_word = self.words[index + 1].to_dict()
+            next_word = self.word2dict(index + 1)
             next_word['tags'] = []
             return next_word
 
@@ -81,25 +83,24 @@ class WordTagger:
                 if tagged:
                     previous_n_words.append(self.tagged_words[i])
                 else:
-                    previous_n_words.append(self.words[i].to_dict())
+                    previous_n_words.append(self.word2dict(i))
             return previous_n_words
 
     def get_next_n_words(self, index, n):
         next_n_words = []
         if index + n < len(self.words):
             for i in range(index + 1, index + n + 1):
-                next_word = self.words[i].to_dict()
+                next_word = self.word2dict(i)
                 next_word['tags'] = []
                 next_n_words.append(next_word)
 
             return next_n_words
 
-    def is_last_word_in_sentence(self, word_index):
-        next_word = self.get_next_word(word_index)
-        return word_index + 1 == len(self.words) or (next_word and self.helper.is_first_word(next_word))
+    def is_last_word(self, word_index):
+        return word_index + 1 == len(self.words)
 
     def get_phrase(self, word_index, n):
-        curr_word_txt = self.words[word_index].to_dict()['text'].lower()
+        curr_word_txt = self.word2dict(word_index)['text'].lower()
         next_n_words = self.get_next_n_words(word_index, n)
         next_n_text = [w['text'].lower() for w in next_n_words]
         phrase = curr_word_txt + " " + " ".join(next_n_text)
@@ -261,7 +262,8 @@ class WordTagger:
 
     def tag_ger(self, word, _):
         """ Gerunds with length >= 10 are nominal form (N) that ends in –ing or –ings """
-        if len(word['text']) >= 10 and 'feats' in word and "VerbForm=Ger" in word['feats']:
+        if len(word['text']) >= 10 and word['xpos'][0] == 'N' and (
+                word['text'][-3:].lower() == 'ing' or word['text'][-4:].lower() == 'ings'):
             return 'GER'
 
     def tag_nn(self, word, _):
@@ -842,7 +844,7 @@ class WordTagger:
             # TO + 2 adverbs + VB
             next_3_words = self.get_next_n_words(word_index, n=3)
             if next_3_words and self.helper.is_adverb(next_3_words[0]) and self.helper.is_adverb(next_3_words[1]) and \
-                    next_2_words[2]['xpos'] == 'VB':
+                    next_3_words[2]['xpos'] == 'VB':
                 return "SPIN"
 
     def tag_spau(self, word, word_index):
@@ -866,7 +868,7 @@ class WordTagger:
     def tag_phc(self, word, word_index):
         """ Phrasal coordination. Any 'and' followed by the same tag if the tag is in (adverb, adjective, verb, noun)"""
         if word['text'].lower() == 'and':
-            if not self.helper.is_first_word(word):
+            if word_index > 0:
                 prev_word = self.get_previous_word(word_index)
                 next_word = self.get_next_word(word_index)
                 if prev_word and next_word and prev_word['upos'] == next_word['upos']:

@@ -1,6 +1,6 @@
 import unittest
 
-import stanza
+import spacy
 
 from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
@@ -9,7 +9,7 @@ from src.tagger.tagger_utils import build_variable_dictionaries
 class TestNegationFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
+        self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
         self.patterns_dict = build_variable_dictionaries()
 
     def test_syne(self):

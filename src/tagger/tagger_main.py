@@ -11,8 +11,7 @@ from src.tagger.tagger_utils import build_variable_dictionaries, tagged_words_to
 from src.tagger.word_tagger import WordTagger
 
 
-def run_tagger(text, token_batch_size, use_gpu=True, show_progress=False):
-    pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=use_gpu)
+def run_tagger(pipeline, text, token_batch_size, show_progress=False):
     patterns_dict = build_variable_dictionaries()
 
     for text_batch in simple_text_batching(text, token_batch_size, show_progress):

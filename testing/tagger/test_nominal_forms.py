@@ -1,6 +1,6 @@
 import unittest
 
-import stanza
+import spacy
 
 from src.tagger.tagger_utils import build_variable_dictionaries
 from src.tagger.word_tagger import WordTagger
@@ -9,7 +9,7 @@ from src.tagger.word_tagger import WordTagger
 class TestNominalFormFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
+        self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
         self.patterns_dict = build_variable_dictionaries()
 
     def test_nomz(self):
@@ -21,8 +21,8 @@ class TestNominalFormFunctions(unittest.TestCase):
         self.assertIn('NOMZ', tagger.tagged_words[10]['tags'])
 
     def test_ger(self):
-        doc = self.pipeline('Democratic gubernatorial candidate , that the ~ GOP is `` Campaigning on the carcass of '
-                            'Eisenhower Republicanism '' . Mitchell')
+        doc = self.pipeline("His voice carries the album well even with some subpar songwriting . "
+                            "I do n't know where people are getting")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Campaigning should be tagged as a GER

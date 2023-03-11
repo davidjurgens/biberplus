@@ -4,10 +4,6 @@ class TagHelper:
         self.patterns = patterns
 
     @staticmethod
-    def is_first_word(word):
-        return word['id'] == 1
-
-    @staticmethod
     def is_adjective(word):
         return word['upos'] == 'ADJ'
 
@@ -74,6 +70,7 @@ class TagHelper:
     @staticmethod
     def is_any_noun(word):
         return word['xpos'][:2] == 'NN'
+
     @staticmethod
     def is_any_verb(word):
         return word['upos'] == 'VERB' or word['upos'] == 'AUX'
@@ -83,16 +80,8 @@ class TagHelper:
         return "Tense=Past" in word['feats']
 
     @staticmethod
-    def is_present_tense(word):
-        return "Tense=Fut" in word['feats']
-
-    @staticmethod
     def is_possesive_pronoun(word):
-        return word['upos'] == 'PRON' and 'feats' in word and 'Poss=Yes' in word['feats']
-
-    @staticmethod
-    def is_future_tense(word):
-        return "Tense=Past"
+        return word['xpos'] == 'PRP$' or word['xpos'] == 'WP$'
 
     def is_quantifier(self, word):
         return word['text'].lower() in self.patterns['quantifiers']
@@ -105,6 +94,7 @@ class TagHelper:
 
     def is_preposition(self, word):
         return word['text'].lower() in self.patterns['prepositional_phrases']
+
     def is_be(self, word):
         return word['text'].lower() in self.patterns['be']
 

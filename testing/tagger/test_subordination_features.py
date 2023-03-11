@@ -1,6 +1,6 @@
 import unittest
 
-import stanza
+import spacy
 
 from src.tagger.tagger_utils import build_variable_dictionaries
 from src.tagger.word_tagger import WordTagger
@@ -9,11 +9,11 @@ from src.tagger.word_tagger import WordTagger
 class TestSubordinationFeatureFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
+        self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
         self.patterns_dict = build_variable_dictionaries()
 
     def test_thvc(self):
-        doc = self.pipeline("I 've read a few of these reviews and think that Fisher Price "
+        doc = self.pipeline("I've read a few of these reviews and think that Fisher Price "
                             "must have a quality control issue .")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
@@ -53,17 +53,16 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
 
     def test_wzpast(self):
         doc = self.pipeline(
-            'in most cases with understanding and restraint . The progress reported by the advisory committee is real . While some')
+            'in most cases with understanding and restraint . The progress reported by the advisory committee is real'
+            ' . While some')
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
-        for tagged in tagger.tagged_words:
-            print(tagged)
         # Reported should be tagged as WZPAST
         self.assertIn('WZPAST', tagger.tagged_words[10]['tags'])
 
     def test_wzpres(self):
-        doc = self.pipeline(
-            "and the mean , and he sees the Compson family disintegrating from within . If the barn-burner 's family produces")
+        doc = self.pipeline("and the mean , and he sees the Compson family disintegrating from within . "
+                            "If the barn-burner 's family produces")
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Disintegrating should be tagged as WZPAST
@@ -98,7 +97,7 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # Whose should be tagged as a PIRE
-        self.assertIn('PIRE', tagger.tagged_words[11]['tags'])
+        self.assertIn('PIRE', tagger.tagged_words[12]['tags'])
 
     def test_sere(self):
         doc = self.pipeline('does not stop until you put the book down , which you will not do '
@@ -145,7 +144,6 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         tagger.run_all()
         # Since should be tagged as an OSUB
         self.assertIn('OSUB', tagger.tagged_words[10]['tags'])
-
 
 
 if __name__ == '__main__':

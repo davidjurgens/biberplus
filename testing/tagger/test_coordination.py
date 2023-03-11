@@ -1,6 +1,6 @@
 import unittest
 
-import stanza
+import spacy
 
 from src.tagger.word_tagger import WordTagger
 from src.tagger.tagger_utils import build_variable_dictionaries
@@ -9,7 +9,7 @@ from src.tagger.tagger_utils import build_variable_dictionaries
 class TestCoordinationFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.pipeline = stanza.Pipeline(lang='en', processors='tokenize,pos', use_gpu=False)
+        self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
         self.patterns_dict = build_variable_dictionaries()
 
     def test_phc(self):
@@ -18,7 +18,7 @@ class TestCoordinationFunctions(unittest.TestCase):
         tagger = WordTagger(doc, self.patterns_dict)
         tagger.run_all()
         # And should be tagged as a PHC
-        self.assertIn('PHC', tagger.tagged_words[10]['tags'])
+        self.assertIn('PHC', tagger.tagged_words[11]['tags'])
 
     def test_andc(self):
         doc = self.pipeline("to write a book that has already been written , and she fails in comparison . "
