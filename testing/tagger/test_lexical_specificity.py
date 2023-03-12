@@ -15,28 +15,29 @@ class TestLexicalSpecificityFunctions(unittest.TestCase):
     def test_type_token_ratio(self):
         doc = self.pipeline("This is an example with repeated words. Words that occur more than once. "
                             "This is a simple example")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
-        self.assertEqual(tagger.ttr, 0.75)
+
+        word_tagger = WordTagger(words=list(doc), patterns_dict=self.patterns_dict)
+        word_tagger.run_all()
+        self.assertEqual(word_tagger.ttr, 0.75)
 
     def test_mean_word_length(self):
         doc = self.pipeline("This is a simple test of words")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
-        self.assertEqual(round(tagger.mean_word_length, 2), 3.43)
+        word_tagger = WordTagger(words=list(doc), patterns_dict=self.patterns_dict)
+        word_tagger.run_all()
+        self.assertEqual(round(word_tagger.mean_word_length, 2), 3.43)
 
     def test_word_count(self):
         doc = self.pipeline("I've read a few of these reviews and think that Fisher Price "
                             "must have a quality control issue .")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
-        self.assertEqual(tagger.word_count, 20)
+        word_tagger = WordTagger(words=list(doc), patterns_dict=self.patterns_dict)
+        word_tagger.run_all()
+        self.assertEqual(word_tagger.word_count, 20)
 
     def test_total_adverbs(self):
         doc = self.pipeline("I quickly and intentionally came up with this example")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
-        self.assertEqual(tagger.adverb_count, 2)
+        word_tagger = WordTagger(words=list(doc), patterns_dict=self.patterns_dict)
+        word_tagger.run_all()
+        self.assertEqual(word_tagger.adverb_count, 2)
 
 
 if __name__ == '__main__':

@@ -7,15 +7,14 @@ from src.tagger.tag_helper import TagHelper
 
 
 class WordTagger:
-    def __init__(self, doc, patterns_dict, ttr_n=400):
+    def __init__(self, words, patterns_dict, ttr_n=400):
         """ Tag a sentence for the Biber tags that have no prior dependencies
-            :param doc: Tagged sentence from stanza
+            :param words: Tagged words from spacy
             :param patterns_dict: Dictionary containing list of words for different patterns.
             e.g. public verbs, downtoners, etc.
             :return:
         """
-        self.doc = doc
-        self.words = list(doc)
+        self.words = words
         self.word_count = len(self.words)
         self.patterns = patterns_dict
         self.helper = TagHelper(patterns_dict)

@@ -2,31 +2,27 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger_utils import build_variable_dictionaries
-from src.tagger.word_tagger import WordTagger
+from src.tagger.tagger_main import run_tagger_on_string
 
 
 class TestNominalFormFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
         self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
-        self.patterns_dict = build_variable_dictionaries()
 
     def test_nomz(self):
-        doc = self.pipeline('consular materials to reveal the motives which led the British government to permit '
-                            'Garibaldi to cross the Straits of Messina')
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
+        text = 'consular materials to reveal the motives which led the British government to permit Garibaldi to cross ' \
+               'the Straits of Messina'
+        tagged_words = run_tagger_on_string(self.pipeline, text)
         # Government should be tagged as a NOMZ
-        self.assertIn('NOMZ', tagger.tagged_words[10]['tags'])
+        self.assertIn('NOMZ', tagged_words[10]['tags'])
 
     def test_ger(self):
-        doc = self.pipeline("His voice carries the album well even with some subpar songwriting . "
-                            "I do n't know where people are getting")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
+        text = "His voice carries the album well even with some subpar songwriting . I do n't know where " \
+               "people are getting"
+        tagged_words = run_tagger_on_string(self.pipeline, text)
         # Campaigning should be tagged as a GER
-        self.assertIn('GER', tagger.tagged_words[10]['tags'])
+        self.assertIn('GER', tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':

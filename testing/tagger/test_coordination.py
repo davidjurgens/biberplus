@@ -2,31 +2,26 @@ import unittest
 
 import spacy
 
-from src.tagger.word_tagger import WordTagger
-from src.tagger.tagger_utils import build_variable_dictionaries
+from src.tagger.tagger_main import run_tagger_on_string
 
 
 class TestCoordinationFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
         self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
-        self.patterns_dict = build_variable_dictionaries()
 
     def test_phc(self):
-        doc = self.pipeline("I dont think it was as good as Suicide Notes and Butterfly Kisses . "
-                            "They should try to be as")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
+        text = "I dont think it was as good as Suicide Notes and Butterfly Kisses . " \
+               "They should try to be as"
+        tagged_words = run_tagger_on_string(self.pipeline, text)
         # And should be tagged as a PHC
-        self.assertIn('PHC', tagger.tagged_words[11]['tags'])
+        self.assertIn('PHC', tagged_words[11]['tags'])
 
     def test_andc(self):
-        doc = self.pipeline("to write a book that has already been written , and she fails in comparison . "
-                            "Spend your money on")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
+        text = "to write a book that has already been written , and she fails in comparison . Spend your money on"
+        tagged_words = run_tagger_on_string(self.pipeline, text)
         # And should be tagged as a ANDC
-        self.assertIn('ANDC', tagger.tagged_words[10]['tags'])
+        self.assertIn('ANDC', tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':

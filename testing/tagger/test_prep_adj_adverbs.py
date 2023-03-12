@@ -2,31 +2,27 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger_utils import build_variable_dictionaries
-from src.tagger.word_tagger import WordTagger
+from src.tagger.tagger_main import run_tagger_on_string
 
 
 class TestPrepPhrasesAdjectiveAdverbFunctions(unittest.TestCase):
 
     def setUp(self) -> None:
         self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
-        self.patterns_dict = build_variable_dictionaries()
 
     def test_pin(self):
-        doc = self.pipeline("have kept my hair in great condition ! A waste of money that 's all I have to say about")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
+        text = "have kept my hair in great condition ! A waste of money that 's all I have to say about"
+        tagged_words = run_tagger_on_string(self.pipeline, text)
+
         # Of should be tagged as PIN
-        self.assertIn('PIN', tagger.tagged_words[10]['tags'])
+        self.assertIn('PIN', tagged_words[10]['tags'])
 
     def test_pred(self):
-        doc = self.pipeline("and rambling . Yeah , these guys were profound and impressive "
-                            "when I was in the 8th grade , but")
-        tagger = WordTagger(doc, self.patterns_dict)
-        tagger.run_all()
+        text = "and rambling . Yeah , these guys were profound and impressive when I was in the 8th grade , but"
+        tagged_words = run_tagger_on_string(self.pipeline, text)
 
         # Impressive should be tagged as a PRED
-        self.assertIn('PRED', tagger.tagged_words[10]['tags'])
+        self.assertIn('PRED', tagged_words[10]['tags'])
 
 
 if __name__ == '__main__':
