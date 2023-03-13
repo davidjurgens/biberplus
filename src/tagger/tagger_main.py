@@ -33,7 +33,7 @@ def run_tagger(pipeline, text, token_batch_size, n_cpu=1, show_progress=False):
             word_tagger = WordTagger(words, patterns_dict)
 
         word_tagger.run_all()
-        yield pd.DataFrame(word_tagger.tagged_words)
+        yield word_tagger
 
 
 def run_tagger_on_string(pipeline, text):
