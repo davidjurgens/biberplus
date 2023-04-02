@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger_main import run_tagger_on_string
+from src.tagger.tagger_main import tag_string
 
 
 class TestNominalFormFunctions(unittest.TestCase):
@@ -13,14 +13,14 @@ class TestNominalFormFunctions(unittest.TestCase):
     def test_nomz(self):
         text = 'consular materials to reveal the motives which led the British government to permit Garibaldi to cross ' \
                'the Straits of Messina'
-        tagged_words = run_tagger_on_string(self.pipeline, text)
+        tagged_words = tag_string(self.pipeline, text)
         # Government should be tagged as a NOMZ
         self.assertIn('NOMZ', tagged_words[10]['tags'])
 
     def test_ger(self):
         text = "His voice carries the album well even with some subpar songwriting . I do n't know where " \
                "people are getting"
-        tagged_words = run_tagger_on_string(self.pipeline, text)
+        tagged_words = tag_string(self.pipeline, text)
         # Campaigning should be tagged as a GER
         self.assertIn('GER', tagged_words[10]['tags'])
 

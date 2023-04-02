@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger_main import run_tagger_on_string
+from src.tagger.tagger_main import tag_string
 
 
 class TestNegationFunctions(unittest.TestCase):
@@ -13,12 +13,12 @@ class TestNegationFunctions(unittest.TestCase):
     def test_syne(self):
         text = "I did n't even want to give it away . No Beatrix Potter appreciator should " \
                "be exposed to this ;"
-        tagged_words = run_tagger_on_string(self.pipeline, text)
+        tagged_words = tag_string(self.pipeline, text)
         self.assertIn('SYNE', tagged_words[10]['tags'])
 
     def test_xx0(self):
         text = ', and General Motors on the other . It is not a medieval mental quirk or an attitude `` unnourished'
-        tagged_words = run_tagger_on_string(self.pipeline, text)
+        tagged_words = tag_string(self.pipeline, text)
         # Not should be tagged as a XXO
         self.assertIn('XX0', tagged_words[10]['tags'])
 

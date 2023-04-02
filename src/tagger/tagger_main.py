@@ -2,21 +2,20 @@ import argparse
 import sys
 
 import numpy as np
-import pandas as pd
 import spacy
 
 sys.path.append('../..')
 
-from src.tagger.data_io import simple_text_batching
+from src.tagger.data_io import simple_split_batching
 from src.tagger.tagger_utils import build_variable_dictionaries, tagged_words_to_tsv
 from src.tagger.word_tagger import WordTagger
 from math import ceil
 
 
-def run_tagger(pipeline, text, token_batch_size, n_cpu=1, show_progress=False):
+def tag_string_batched(pipeline, text, token_batch_size=1000, n_cpu=1, show_progress=False):
     patterns_dict = build_variable_dictionaries()
 
-    for text_batch in simple_text_batching(text, token_batch_size, show_progress):
+    for text_batch in simple_split_batching(text, token_batch_size, show_progress):
         if n_cpu == 1:
             doc = pipeline(text_batch)
             word_tagger = WordTagger(words=list(doc), patterns_dict=patterns_dict)
@@ -36,21 +35,16 @@ def run_tagger(pipeline, text, token_batch_size, n_cpu=1, show_progress=False):
         yield word_tagger
 
 
-def run_tagger_on_string(pipeline, text):
+def tag_text(text, use_gpu=True):
+    pipeline = load_pipeline(use_gpu)
+    return tag_string(pipeline, text)
+
+
+def tag_string(pipeline, text):
     patterns_dict = build_variable_dictionaries()
     doc = pipeline(text)
     word_tagger = WordTagger(words=list(doc), patterns_dict=patterns_dict)
     word_tagger.run_all()
-    return word_tagger.tagged_words
-
-
-def tag_text(text, use_gpu=True):
-    patterns_dict = build_variable_dictionaries()
-    pipeline = load_pipeline(use_gpu)
-    doc = pipeline(text)
-    word_tagger = WordTagger(doc, patterns_dict)
-    word_tagger.run_all()
-
     return word_tagger.tagged_words
 
 
@@ -60,7 +54,7 @@ def main(args):
     with open(args.text_file, 'r') as f:
         text = f.read()
 
-    tagged_sents = run_tagger(pipeline, text, token_batch_size=100, show_progress=False)
+    tagged_sents = tag_string_batched(pipeline, text, token_batch_size=100, show_progress=False)
 
     if args.output_file:
         tagged_words_to_tsv(tagged_sents, args.output_file)

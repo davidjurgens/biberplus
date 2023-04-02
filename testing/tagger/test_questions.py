@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger_main import run_tagger_on_string
+from src.tagger.tagger_main import tag_string
 
 
 class TestQuestionFunctions(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestQuestionFunctions(unittest.TestCase):
 
     def test_whqu(self):
         text = "only ended up as one due to Columbia Records . Why did it bomb ? Because it 's awful ,"
-        tagged_words = run_tagger_on_string(self.pipeline, text)
+        tagged_words = tag_string(self.pipeline, text)
         # Why should be tagged as WHQU
         self.assertIn('WHQU', tagged_words[10]['tags'])
 
