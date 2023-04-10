@@ -3,8 +3,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from src.tagger.run_order import RUN_ORDER
-from src.tagger.tag_helper import TagHelper
+from bibermda.tagger.run_order import RUN_ORDER
+from bibermda.tagger.tag_helper import TagHelper
 
 
 class WordTagger:

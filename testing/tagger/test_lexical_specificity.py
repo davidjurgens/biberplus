@@ -2,8 +2,8 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger_utils import build_variable_dictionaries
-from src.tagger.word_tagger import WordTagger
+from bibermda.tagger.tagger_utils import build_variable_dictionaries
+from bibermda.tagger.word_tagger import WordTagger
 
 
 class TestLexicalSpecificityFunctions(unittest.TestCase):

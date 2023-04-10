@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger import tag_string
+from bibermda.tagger import tag_string
 
 
 class TestPronounProverbFunctions(unittest.TestCase):
