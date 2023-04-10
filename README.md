@@ -20,7 +20,7 @@ For large text processing make sure to enable GPU with the `use_gpu` flag when l
 ### Tagger
 
 **Tag a string**
-```
+```python
 from bibermda.tagger import load_pipeline, tag_string
 
 pipeline = load_pipeline(use_gpu=False)
@@ -30,22 +30,31 @@ tagged_words = tag_string(pipeline, text)
 ```
 
 **Tag a large string**
-```
+```python
 from bibermda.tagger import load_pipeline, tag_large_string
 
 pipeline = load_pipeline(use_gpu=True)
 
 # Output the tags to a compressed TSV file. Best for larger inputs
-tag_large_string(pipeline, text, out_tsv='large_text.tsv.gz', show_progess=True)
+tag_large_string(pipeline, 
+                 text, 
+                 out_tsv='large_text.tsv.gz', 
+                 show_progess=True)
 ```
 
 **Tag a large string with parallel processes**
 
 If you have a lot of CPU power, crank up the processes, and it significantly speeds things up!
-```
+```python
 from bibermda.tagger import tag_string_parallel
 
-tag_string_parallel(pipeline, text, out_tsv='large_text.tsv.gz', token_batch_size=10000, n_processes=4, use_gpu=True, show_progress=False)
+tag_string_parallel(pipeline, 
+                    text, 
+                    out_tsv='large_text.tsv.gz', 
+                    token_batch_size=10000, 
+                    n_processes=4, 
+                    use_gpu=True, 
+                    show_progress=False)
 ```
 
 
@@ -55,22 +64,29 @@ The analyzer will run the tagger and calculate the mean, min, max, range, and st
 Biber's default of counting per 1,000 tokens
 
 **Corpus statistics for a text string**
-```
+```python
 from bibermda.analyzer import calculate_corpus_statistics
 
-statistics_dataframe = calculate_corpus_statistics(text, token_batch_size=10000, token_normalization=1000, use_gpu=True,
-                                show_progress=False)
+statistics_dataframe = calculate_corpus_statistics(text, 
+                                                   token_batch_size=10000, 
+                                                   token_normalization=1000, 
+                                                   use_gpu=True,
+                                                   show_progress=False)
 ```
 
 **Corpus statistics for a large text string**
 
 The main difference is that it uses the parallel tagger to improve the speed. The vast majority of the runtime comes from 
 comes from the tagging. 
-```
+```python
 from bibermda.analyzer import calculate_corpus_statistics_parallel
 
-statistics_dataframe = calculate_corpus_statistics_parallel(text, token_batch_size, token_normalization=1000, n_processes=4, use_gpu=True,
-                                         show_progress=False)
+statistics_dataframe = calculate_corpus_statistics_parallel(text, 
+                                                            token_batch_size, 
+                                                            token_normalization=1000, 
+                                                            n_processes=4, 
+                                                            use_gpu=True, 
+                                                            show_progress=False)
 ```
 
 **Corpus statistics for a text directory**
