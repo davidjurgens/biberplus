@@ -1,9 +1,0 @@
-each
-all
-every
-many
-much
-few
-several
-some
-any
