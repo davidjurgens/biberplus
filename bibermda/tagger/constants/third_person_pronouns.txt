@@ -1,0 +1,11 @@
+she
+he
+they
+her
+him
+them
+his
+their
+himself
+herself
+themselves
