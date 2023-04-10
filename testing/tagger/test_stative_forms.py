@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from src.tagger.tagger_main import tag_string
+from src.tagger.tagger import tag_string
 
 
 class TestStativeFormFunctions(unittest.TestCase):
