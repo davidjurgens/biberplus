@@ -48,8 +48,7 @@ If you have a lot of CPU power, crank up the processes, and it significantly spe
 ```python
 from bibermda.tagger import tag_string_parallel
 
-tag_string_parallel(pipeline, 
-                    text, 
+tag_string_parallel(text, 
                     out_tsv='large_text.tsv.gz', 
                     token_batch_size=10000, 
                     n_processes=4, 

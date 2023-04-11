@@ -14,7 +14,7 @@ from bibermda.tagger.word_tagger import WordTagger
 from tqdm import tqdm
 
 
-def tag_string_parallel(text, token_batch_size=10000, n_processes=4, use_gpu=True, show_progress=False):
+def tag_string_parallel(text, out_tsv, token_batch_size=10000, n_processes=4, use_gpu=True, show_progress=False):
     patterns_dict = build_variable_dictionaries()
 
     # Split the text into batches
@@ -33,6 +33,9 @@ def tag_string_parallel(text, token_batch_size=10000, n_processes=4, use_gpu=Tru
         else:
             for tagged_words in p.starmap(tag_string, process_args):
                 all_tagged.extend(tagged_words)
+
+    df = pd.DataFrame(all_tagged)
+    df.to_csv(out_tsv, sep='\t', index=False, compression='gzip')
 
 
 def tag_string(patterns_dict, text, use_gpu):
