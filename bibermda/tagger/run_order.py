@@ -54,15 +54,14 @@ RUN_ORDER = [
     'tag_tsub',
     'tag_thvc',
     'tag_nn',
-    'tag_demp',
-    'tag_demo',
     'tag_whqu',
     'tag_emph',
     'tag_hdg',
     'tag_wzpast',
     'tag_thac',
+    'tag_demp',
+    'tag_demo',
     'tag_peas',
-    'tag_andc',
     'tag_presp',
     'tag_prod',
     'tag_spau',
@@ -71,4 +70,5 @@ RUN_ORDER = [
     'tag_whobj',
     'tag_whsub',
     'tag_whcl',
+    'tag_andc'
 ]

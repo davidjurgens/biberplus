@@ -9,7 +9,7 @@ from bibermda.tagger.tag_helper import TagHelper
 
 class WordTagger:
     def __init__(self, words, patterns_dict, ttr_n=400):
-        """ Tag a sentence for the Biber tags that have no prior dependencies
+        """
             :param words: Tagged words from spacy
             :param patterns_dict: Dictionary containing list of words for different patterns.
             e.g. public verbs, downtoners, etc.
@@ -54,7 +54,6 @@ class WordTagger:
 
             self.update_doc_level_stats(tagged_word)
         self.mean_word_length = np.array(self.word_lengths).mean()
-        self.compute_type_token_ratio()
 
     """ Helper functions """
 
@@ -84,9 +83,6 @@ class WordTagger:
             padding = [None] * (n - len(next_n_words))
             next_n_words.extend(padding)
         return next_n_words
-
-    def is_last_word(self, word_index):
-        return word_index + 1 == len(self.words)
 
     def get_phrase(self, next_n_words):
         curr_word_txt = self.tagged_words[self.current_index]['text'].lower()
@@ -586,8 +582,7 @@ class WordTagger:
     """ K) Lexical Classes """
 
     def tag_conj(self, word, previous_words, next_words):
-        """ Conjucts finds any item in the conjucts list with preceding punctuation.
-        Only the first word is tagged """
+        """ Conjucts finds any item in the conjucts list with preceding punctuation. Only the first word is tagged """
         if word['text'].lower() in self.patterns['conjucts']:
             return 'CONJ'
 
@@ -824,10 +819,11 @@ class WordTagger:
                                   self.tag_dpar(next_words[0], previous_words[1:], next_words[1:]) or
                                   self.tag_conj(next_words[0], previous_words[1:], next_words[1:])):
                 return "ANDC"
-            # Previous by any punctuation
 
+            # Preceded by any punctuation
             if previous_words[0] and self.helper.is_punctuation(previous_words[0]):
                 return "ANDC"
+
             # Preceded by a comma
             if previous_words[0] and previous_words[0]['text'] == ',':
                 # Followed by it, so, then, you or DEMP or personal pronouns
