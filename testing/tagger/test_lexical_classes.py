@@ -28,6 +28,12 @@ class TestLexicalClassesFunctions(unittest.TestCase):
         # Maybe should be tagged as a HDG
         self.assertIn('HDG', tagged_words[10]['tags'])
 
+    def test_three_word_hdg(self):
+        text = 'that blow to be borderline . To kayo him and more or less or maybe not kill . You hit again about'
+        tagged_words = tag_string(self.pipeline, text)
+        # More should be tagged as a HDG
+        self.assertIn('HDG', tagged_words[10]['tags'])
+
     def test_amp(self):
         text = 'lie around on the rug during the meal , a very pretty sight as Rob Roy , '
         tagged_words = tag_string(self.pipeline, text)
@@ -38,6 +44,12 @@ class TestLexicalClassesFunctions(unittest.TestCase):
         text = 'not be subjected to such a risk , or that such a possibility should not be permitted to endanger the'
         tagged_words = tag_string(self.pipeline, text)
         # Such should be tagged as a EMPH
+        self.assertIn('EMPH', tagged_words[10]['tags'])
+
+    def test_two_word_emph(self):
+        text = 'not be subjected to such a risk , or that for sure a possibility should not be permitted to endanger the'
+        tagged_words = tag_string(self.pipeline, text)
+        # For should be tagged as a EMPH
         self.assertIn('EMPH', tagged_words[10]['tags'])
 
     def test_dpar(self):
