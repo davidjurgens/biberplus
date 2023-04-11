@@ -10,6 +10,8 @@ setup(
     license='MIT License',
     packages=['bibermda', 'bibermda.analyzer', 'bibermda.tagger'],
     py_modules=['bibermda', 'bibermda.analyzer', 'bibermda.tagger'],
+    package_data={'bibermda.tagger': ['bibermda/tagger/constants/*.txt'],
+                  'bibermda.analyzer': ['bibermda/tagger/constants/*.txt']},
     install_requires=['pandas', 'numpy', 'spacy', 'tqdm'],
     python_requires='>=3.6',
     classifiers=[
