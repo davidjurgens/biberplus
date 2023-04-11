@@ -12,7 +12,9 @@ setup(
     py_modules=['bibermda', 'bibermda.analyzer', 'bibermda.tagger'],
     package_data={'bibermda.tagger': ['bibermda/tagger/constants/*.txt'],
                   'bibermda.analyzer': ['bibermda/tagger/constants/*.txt']},
-    install_requires=['pandas', 'numpy', 'spacy', 'tqdm'],
+    install_requires=['pandas', 'numpy', 'spacy', 'tqdm',
+                      'blis', 'confection',
+                      'https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl'],
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 3 - Alpha',
