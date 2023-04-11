@@ -8,7 +8,7 @@ setup(
     author='Kenan Alkiek, David Jurgens',
     author_email='kalkiek@umich.edu',
     license='MIT License',
-    packages=['pyexample'],
+    packages=['bibermda'],
     install_requires=['pandas', 'numpy', 'spacy', 'tqdm', 'en-core-web-sm'],
 
     classifiers=[
