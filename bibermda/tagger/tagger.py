@@ -64,4 +64,4 @@ def load_pipeline(use_gpu):
     else:
         spacy.prefer_gpu()
 
-    return spacy.load("en_core_web_sm", disable=['tagger', 'parser', 'lemmatizer', 'ner'])
+    return spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])

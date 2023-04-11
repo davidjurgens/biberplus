@@ -7,7 +7,7 @@
 
 Install the pip package using the GitHub link
 
-```pip install bibermda @ git+https://github.com/davidjurgens/biber-multidimensional-register-analysis```
+```pip install git+https://github.com/davidjurgens/biber-multidimensional-register-analysis```
 
 Once tha package is public...
 
