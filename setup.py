@@ -9,7 +9,7 @@ setup(
     author_email='kalkiek@umich.edu',
     license='MIT License',
     packages=['bibermda'],
-    install_requires=['pandas', 'numpy', 'spacy', 'tqdm', 'en-core-web-sm'],
+    install_requires=['pandas', 'numpy', 'spacy', 'tqdm'],
 
     classifiers=[
         'Development Status :: 3 - Alpha',
