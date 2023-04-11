@@ -11,7 +11,7 @@ setup(
     packages=['bibermda', 'bibermda.analyzer', 'bibermda.tagger'],
     py_modules=['bibermda', 'bibermda.analyzer', 'bibermda.tagger'],
     install_requires=['pandas', 'numpy', 'spacy', 'tqdm'],
-
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
