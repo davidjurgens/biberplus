@@ -8,7 +8,8 @@ setup(
     author='Kenan Alkiek, David Jurgens',
     author_email='kalkiek@umich.edu',
     license='MIT License',
-    packages=['bibermda'],
+    packages=['bibermda', 'bibermda.analyzer', 'bibermda.tagger'],
+    py_modules=['bibermda', 'bibermda.analyzer', 'bibermda.tagger'],
     install_requires=['pandas', 'numpy', 'spacy', 'tqdm'],
 
     classifiers=[
