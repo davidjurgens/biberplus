@@ -277,33 +277,27 @@ class WordTagger:
     def tag_bypa(self, word, previous_words, next_words):
         """ By-passives. PASS are found and the preposition by follows it"""
         if 'PASS' in word['tags']:
-            if next_words[0] and next_words[0]['text'].lower() == 'by':
-                return "BYPA"
-        # By can be 2-4 words in front of the passive
-        if next_words[1] and (next_words[0]['text'].lower() == 'by' or next_words[1]['text'].lower() == 'by'):
-            return "BYPA"
-
-        if next_words[2] and next_words[2]['text'].lower() == 'by':
-            return "BYPA"
-
-        if next_words[3] and next_words[3]['text'].lower() == 'by':
-            return "BYPA"
+            for i in range(min(len(next_words), 4)):
+                if next_words[i]['text'].lower() == 'by':
+                    return 'BYPA'
 
     """ G) Stative Forms"""
 
     def tag_bema(self, word, previous_words, next_words):
         """ Be as main verb (BEMA): BE followed by a (DT), (PRP$) or a (PIN) or an adjective (JJ). Slight modification
         from Biber. Allow adverbs or negations to appear between the verb BE and the rest of the pattern """
-        if self.helper.is_be(word):
-            if next_words[0]:
-                if next_words[0]['xpos'] in ['DT', 'PRP$', 'JJ', 'JJR'] or self.helper.is_preposition(next_words[0]):
-                    return 'BEMA'
-            # BE + (Adverb|Negation) + ...
-            if next_words[1]:
-                if (self.helper.is_adverb(next_words[0]) or self.tag_xx0(next_words[0], None, None)) and (
-                        next_words[1]['xpos'] in ['DT', 'PRP$', 'JJ', 'JJR'] or
-                        self.helper.is_preposition(next_words[1])):
-                    return 'BEMA'
+        if not self.helper.is_be(word):
+            return None
+
+            # Check the first possible pattern: BE + (DT|PRP$|JJ|JJR|PIN)
+        if next_words[0] and (
+                next_words[0]['xpos'] in ['DT', 'PRP$', 'JJ', 'JJR'] or self.helper.is_preposition(next_words[0])):
+            return 'BEMA'
+
+            # Check the second possible pattern: BE + (Adverb|Negation) + (DT|PRP$|JJ|JJR|PIN)
+        if next_words[1] and (self.helper.is_adverb(next_words[0]) or self.tag_xx0(next_words[0], None, None)) and (
+                next_words[1]['xpos'] in ['DT', 'PRP$', 'JJ', 'JJR'] or self.helper.is_preposition(next_words[1])):
+            return 'BEMA'
 
     def tag_ex(self, word, previous_words, next_words):
         """ Existential there from the POS tags"""
