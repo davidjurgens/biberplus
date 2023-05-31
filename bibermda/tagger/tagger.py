@@ -1,9 +1,9 @@
 import sys
 
+sys.path.append('../..')
+
 from bibermda.tagger.function_words_tagger import FunctionWordsTagger
 from bibermda.tagger.grieve_clarke_tagger import GrieveClarkeTagger
-
-sys.path.append('../..')
 
 from bibermda.tagger.data_io import simple_split_batching
 from bibermda.tagger.tagger_utils import build_variable_dictionaries, load_config, load_pipeline
