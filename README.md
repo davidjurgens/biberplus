@@ -1,6 +1,8 @@
 # Biber MDA
 
 - A pure Python implementation of Biber\'s (1988) Variation across Speech and Writing linguistic tags
+- Includes supplemental features from the work of Grieve, Clarke, et al.
+- Built-in function word tagger, PCA, and factor analysis
 - Built upon the spacy library for fast part-of-speech tagging
 
 ## Installation
@@ -15,101 +17,135 @@ Once tha package is public...
 
 ## Quickstart Examples
 
-For large text processing make sure to enable GPU with the `use_gpu` flag when loading in the pipeline
+For large text processing make sure to enable GPU with the `use_gpu` flag when loading in the pipeline and to load in
+the
+pipeline once prior to calling the tagger.
 
-### Tagger
+### Biber Tagger
 
-**Tag a string**
-```python
-from bibermda.tagger import load_pipeline, tag_string
-
-pipeline = load_pipeline(use_gpu=False)
-
-# Return a list of tagged values as a dictionary. Best for smaller inputs  
-tagged_words = tag_string(pipeline, text)
-```
-
-**Tag a large string**
-```python
-from bibermda.tagger import load_pipeline, tag_large_string
-
-pipeline = load_pipeline(use_gpu=True)
-
-# Output the tags to a compressed TSV file. Best for larger inputs
-tag_large_string(pipeline, 
-                 text, 
-                 out_tsv='large_text.tsv.gz', 
-                 show_progess=True)
-```
-
-**Tag a large string with parallel processes**
-
-If you have a lot of CPU power, crank up the processes, and it significantly speeds things up!
-```python
-from bibermda.tagger import tag_string_parallel
-
-tag_string_parallel(text, 
-                    out_tsv='large_text.tsv.gz', 
-                    token_batch_size=10000, 
-                    n_processes=4, 
-                    use_gpu=True, 
-                    show_progress=False)
-```
-
-
-###  Analyzer
-
+The default return value is a DataFrame containing the frequencies per linguistic tag for every N tokens.
 The analyzer will run the tagger and calculate the mean, min, max, range, and standard deviation of tag counts. We use
 Biber's default of counting per 1,000 tokens
 
-**Corpus statistics for a text string**
-```python
-from bibermda.analyzer import calculate_corpus_statistics
+If you want the tagged text itself, checkout the examples provided in the `examples/Tagger Examples` notebook.
 
-statistics_dataframe = calculate_corpus_statistics(text, 
-                                                   token_batch_size=10000, 
-                                                   token_normalization=1000, 
-                                                   use_gpu=True,
-                                                   show_progress=False)
+**Tag a string with the default configuration**
+
+```python
+from bibermda.tagger import calculate_tag_frequencies
+
+frequencies_df = calculate_tag_frequencies(text)
 ```
 
-**Corpus statistics for a large text string**
+**Tag a large corpus with multi-processing**
 
-The main difference is that it uses the parallel tagger to improve the speed. The vast majority of the runtime comes from 
-comes from the tagging. 
+Use the GPU and multi-processing to speed things up. Modify from the default configuration
+
 ```python
-from bibermda.analyzer import calculate_corpus_statistics_parallel
+from bibermda.tagger import load_config, load_pipeline, calculate_tag_frequencies
 
-statistics_dataframe = calculate_corpus_statistics_parallel(text, 
-                                                            token_batch_size, 
-                                                            token_normalization=1000, 
-                                                            n_processes=4, 
-                                                            use_gpu=True, 
-                                                            show_progress=False)
+config = load_config()
+config.update({'use_gpu': True, 'n_processes': 4, 'function_words': False})
+pipeline = load_pipeline(config)
+frequencies_df = calculate_tag_frequencies(text, pipeline, config)
 ```
 
-**Corpus statistics for a text directory**
+**Return the tagged text rather than the calculated frequencies**
 
-Coming out in the next version
+```python
+from bibermda.tagger import tag_text
 
-## Generate Low-Dimensional Embeddings
+tagged_words = tag_text(text)
+```
 
-TODO: Release in next version
-**PCA**
+---
 
-``` TODO ```
+### Function Words Tagger
 
-**Factor Analysis**
+**Using the default list provided**
+The default behavior uses 100 of the most frequent function words. You may pass in your own list of functions words as
+as a variable. The default list of function words can be found at `bibermda/tagger/constants/function_words.txt`
 
-``` TODO ```
+```python
+from bibermda.tagger import load_config, calculate_tag_frequencies
 
-## Use Biber + Grieve Features
+config = load_config()
+config.update({'use_gpu': True, 'biber': False, 'grieve_clarke': False})
+frequencies_df = calculate_tag_frequencies(text)
+```
 
+**Using your own list**
+
+```python
+from bibermda.tagger import load_config, tag_text
+
+function_words = [...]
+config = load_config()
+config.update({'function_words': True, 'biber': False, 'grieve_clarke': False,
+               'function_words_list': function_words})
+frequencies_df = calculate_tag_frequencies(text, function_words)
+```
+
+---
+
+## Encode Text To Embeddings
+
+The 67x5 Biber frequencies DataFrame is flattened into a vector of length 335
+Similarly the function words and additional Grieve/Clarke tag frequencies are f
+The output length of the vector is dependent on the input options
+
+**Biber + Function Words example embedding**
+
+```python
+from bibermda.tagger import load_config
+from bibermda.reducer import encode_text
+
+config = load_config()
+embedding = encode_text(text, config)
+```
+
+---
+
+## Dimension Reduction
+
+### PCA
+
+**Biber + Function Words PCA**
+
+```python
+from bibermda.tagger import load_config, load_pipeline, calculate_tag_frequencies
+from bibermda.reducer import tags_pca
+
+config = load_config()
+config.update({'use_gpu': True, 'function_words': True})
+pipeline = load_pipeline(config)
+frequencies_df = calculate_tag_frequencies(text, pipeline, config)
+
+pca_df, explained_variance = tags_pca(frequencies_df, components=2)
+```
+
+### Factor Analysis
+
+**Biber + Function Words PCA**
+
+
+---
 
 ## References
-- Biber, D. (1988). Variation across Speech and Writing. Cambridge: Cambridge University Press. doi:10.1017/CBO9780511621024
-- Nini, A. (2019). The Multi-Dimensional Analysis Tagger. In Berber Sardinha, T. & Veirano Pinto M. (eds), "Multi-Dimensional Analysis: Research Methods and Current Issues", 67-94, London; New York: Bloomsbury Academic. [Download pre-print]
-We reference Nini, A. (2019)'s documentation and used their open source software for validation of our library
+
+- Biber, D. (1988). Variation across Speech and Writing. Cambridge: Cambridge University Press. doi:
+  10.1017/CBO9780511621024
+- Nini, A. (2019). The Multi-Dimensional Analysis Tagger. In Berber Sardinha, T. & Veirano Pinto M. (eds), "
+  Multi-Dimensional Analysis: Research Methods and Current Issues", 67-94, London; New York: Bloomsbury
+  Academic. [Download pre-print]
+  We reference Nini, A. (2019)'s documentation and used their open source software for validation of our library
+- Grieve, J. (2023). Register variation explains stylometric authorship analysis. Corpus Linguistics and Linguistic
+  Theory, 19(1), 47-77. https://doi.org/10.1515/cllt-2022-0040
+- Dimensions of Abusive Language on Twitter (Clarke & Grieve, ALW 2017)
+- Grieve, J., Biber, D., Friginal, E., Nekrasova, T. (2010). Variation Among Blogs: A Multi-dimensional Analysis. In:
+  Mehler, A., Sharoff, S., Santini, M. (eds) Genres on the Web. Text, Speech and Language Technology, vol 42. Springer,
+  Dordrecht. https://doi.org/10.1007/978-90-481-9178-9_14
 
 ## LICENSE
+
 MIT License
