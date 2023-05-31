@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from bibermda.tagger import tag_string
+from bibermda.tagger import tag_text
 
 
 class TestTenseAspectFunctions(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestTenseAspectFunctions(unittest.TestCase):
     def test_peas(self):
         text = "the exchange , so far all my dealings with amazon have been easy and fair . " \
                "Waterloo Station is a"
-        tagged_words = tag_string(self.pipeline, text)
+        tagged_words = tag_text(text, pipeline=self.pipeline)
         # Have should be tagged as PEAS
         self.assertIn('PEAS', tagged_words[10]['tags'])
 

@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from bibermda.tagger import tag_string
+from bibermda.tagger import tag_text
 
 
 class TestNegationFunctions(unittest.TestCase):
@@ -13,12 +13,12 @@ class TestNegationFunctions(unittest.TestCase):
     def test_syne(self):
         text = "I did n't even want to give it away . No Beatrix Potter appreciator should " \
                "be exposed to this ;"
-        tagged_words = tag_string(self.pipeline, text)
+        tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn('SYNE', tagged_words[10]['tags'])
 
     def test_xx0(self):
         text = ', and General Motors on the other . It is not a medieval mental quirk or an attitude `` unnourished'
-        tagged_words = tag_string(self.pipeline, text)
+        tagged_words = tag_text(text, pipeline=self.pipeline)
         # Not should be tagged as a XXO
         self.assertIn('XX0', tagged_words[10]['tags'])
 

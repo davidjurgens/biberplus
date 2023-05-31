@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from bibermda.tagger import tag_string
+from bibermda.tagger import tag_text
 
 
 class TestStativeFormFunctions(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestStativeFormFunctions(unittest.TestCase):
 
     def test_bema(self):
         text = 'have a little boy that likes tractors , you can be certain this will be entertaining to him ! '
-        tagged_words = tag_string(self.pipeline, text)
+        tagged_words = tag_text(text, pipeline=self.pipeline)
         # 'Be' should be tagged as BEMA
         self.assertIn('BEMA', tagged_words[10]['tags'])
 

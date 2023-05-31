@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from bibermda.tagger import tag_string
+from bibermda.tagger import tag_text
 
 
 class TestPassivesFunctions(unittest.TestCase):
@@ -12,14 +12,14 @@ class TestPassivesFunctions(unittest.TestCase):
     def test_pass(self):
         text = 'sound scape is great , I am hearing nuance that was never heard before - an otherwise ' \
                'perfect headphone for'
-        tagged_words = tag_string(self.pipeline, text)
+        tagged_words = tag_text(text, pipeline=self.pipeline)
         # Was should be tagged as a PASS
         self.assertIn('PASS', tagged_words[10]['tags'])
 
     def test_bypa(self):
         text = 'well after the Egyptian Golden Years , after Egypt had been conquered by the Greeks ... ' \
                'a time during which'
-        tagged_words = tag_string(self.pipeline, text)
+        tagged_words = tag_text(text, pipeline=self.pipeline)
         # onquered should be tagged as a BYPA
         self.assertIn('BYPA', tagged_words[10]['tags'])
 
