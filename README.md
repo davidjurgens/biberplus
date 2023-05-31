@@ -17,17 +17,14 @@ Once tha package is public...
 
 ## Quickstart Examples
 
-For large text processing make sure to enable GPU with the `use_gpu` flag when loading in the pipeline and to load in
-the
-pipeline once prior to calling the tagger.
+For large text processing make sure to enable GPU with the `use_gpu` flag in the configuration. To use multiple
+CPUs, set `n_processes` in the configuration.
 
 ### Biber Tagger
 
 The default return value is a DataFrame containing the frequencies per linguistic tag for every N tokens.
-The analyzer will run the tagger and calculate the mean, min, max, range, and standard deviation of tag counts. We use
-Biber's default of counting per 1,000 tokens
-
-If you want the tagged text itself, checkout the examples provided in the `examples/Tagger Examples` notebook.
+The tagger will calculate the mean, min, max, range, and standard deviation of tag counts. We use Biber's default of
+counting per 1,000 tokens
 
 **Tag a string with the default configuration**
 
@@ -39,7 +36,7 @@ frequencies_df = calculate_tag_frequencies(text)
 
 **Tag a large corpus with multi-processing**
 
-Use the GPU and multi-processing to speed things up. Modify from the default configuration
+Use the GPU and multi-processing to speed things up. Modify from the default configuration.
 
 ```python
 from bibermda.tagger import load_config, load_pipeline, calculate_tag_frequencies
@@ -52,6 +49,8 @@ frequencies_df = calculate_tag_frequencies(text, pipeline, config)
 
 **Return the tagged text rather than the calculated frequencies**
 
+If you are calling `tag_text` on many strings, load in the Spacy pipeline once with `load_pipeline`
+
 ```python
 from bibermda.tagger import tag_text
 
@@ -63,6 +62,7 @@ tagged_words = tag_text(text)
 ### Function Words Tagger
 
 **Using the default list provided**
+
 The default behavior uses 100 of the most frequent function words. You may pass in your own list of functions words as
 as a variable. The default list of function words can be found at `bibermda/tagger/constants/function_words.txt`
 
@@ -77,7 +77,7 @@ frequencies_df = calculate_tag_frequencies(text)
 **Using your own list**
 
 ```python
-from bibermda.tagger import load_config, tag_text
+from bibermda.tagger import load_config, calculate_tag_frequencies
 
 function_words = [...]
 config = load_config()
@@ -137,7 +137,7 @@ pca_df, explained_variance = tags_pca(frequencies_df, components=2)
   10.1017/CBO9780511621024
 - Nini, A. (2019). The Multi-Dimensional Analysis Tagger. In Berber Sardinha, T. & Veirano Pinto M. (eds), "
   Multi-Dimensional Analysis: Research Methods and Current Issues", 67-94, London; New York: Bloomsbury
-  Academic. [Download pre-print]
+  Academic. 
   We reference Nini, A. (2019)'s documentation and used their open source software for validation of our library
 - Grieve, J. (2023). Register variation explains stylometric authorship analysis. Corpus Linguistics and Linguistic
   Theory, 19(1), 47-77. https://doi.org/10.1515/cllt-2022-0040
