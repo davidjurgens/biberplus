@@ -274,7 +274,7 @@ class BiberTagger:
         """ By-passives. PASS are found and the preposition by follows it"""
         if 'PASS' in word['tags']:
             for i in range(min(len(next_words), 4)):
-                if next_words[i]['text'].lower() == 'by':
+                if next_words[i] and next_words[i]['text'].lower() == 'by':
                     return 'BYPA'
 
     """ G) Stative Forms"""
