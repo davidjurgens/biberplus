@@ -1,12 +1,14 @@
 import os
 from glob import glob
 
-import pandas as pd
+import spacy
+import yaml
 
 
-def tagged_words_to_tsv(tagged_words, out_file):
-    tagged_words_df = pd.DataFrame(tagged_words)
-    tagged_words_df.to_csv(out_file, sep='\t', index=False)
+def load_config():
+    config_fp = os.path.dirname(__file__) + '/config.yaml'
+    with open(config_fp) as f:
+        return yaml.safe_load(f)
 
 
 def build_variable_dictionaries():
@@ -30,3 +32,21 @@ def read_in_variables(txt_file):
             if var:
                 variables.append(var)
     return set(variables)
+
+
+def load_pipeline(config):
+    if config['use_gpu']:
+        spacy.require_gpu()
+    else:
+        spacy.prefer_gpu()
+
+    return spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner', 'textcat'])
+
+
+def load_tokenizer(use_gpu=False):
+    if use_gpu:
+        spacy.require_gpu()
+    else:
+        spacy.prefer_gpu()
+
+    return spacy.load("en_core_web_sm", disable=['tagger', 'parser', 'lemmatizer', 'ner', 'textcat'])

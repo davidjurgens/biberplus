@@ -3,21 +3,19 @@ from copy import deepcopy
 
 import numpy as np
 
-from bibermda.tagger.run_order import RUN_ORDER
+from bibermda.tagger.biber_run_order import RUN_ORDER
 from bibermda.tagger.tag_helper import TagHelper
 
 
-class WordTagger:
-    def __init__(self, words, patterns_dict, ttr_n=400):
+class BiberTagger:
+    def __init__(self, tagged_words, patterns_dict, ttr_n=400):
         """
-            :param words: Tagged words from spacy
+            :param tagged_words: Words in the form of a dictionary
             :param patterns_dict: Dictionary containing list of words for different patterns.
             e.g. public verbs, downtoners, etc.
-            :return:
         """
-        self.words = words
-        self.tagged_words = [self.word2dict(index) for index in range(len(self.words))]
-        self.word_count = len(self.words)
+        self.tagged_words = tagged_words
+        self.word_count = len(self.tagged_words)
         self.patterns = patterns_dict
         self.helper = TagHelper(patterns_dict)
         self.word_lengths = []
@@ -55,11 +53,9 @@ class WordTagger:
             self.update_doc_level_stats(tagged_word)
         self.mean_word_length = np.array(self.word_lengths).mean()
 
-    """ Helper functions """
+        return self.tagged_words
 
-    def word2dict(self, word_index):
-        word = self.words[word_index]
-        return {'text': word.text, 'upos': word.pos_, 'xpos': word.tag_, 'index': word_index, 'tags': []}
+    """ Helper functions """
 
     def update_doc_level_stats(self, word):
         if self.helper.is_adverb(word):
@@ -569,7 +565,7 @@ class WordTagger:
         uniq_vocab = set()
 
         for i in range(self.ttr_n):
-            uniq_vocab.add(self.words[i].text.lower())
+            uniq_vocab.add(self.tagged_words[i]['text'].lower())
 
         self.ttr = len(uniq_vocab) / self.ttr_n
 

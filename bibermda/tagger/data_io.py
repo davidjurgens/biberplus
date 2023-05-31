@@ -1,7 +1,10 @@
+from glob import glob
 from math import ceil
 
-import spacy
+import numpy as np
 from tqdm import tqdm
+
+from bibermda.tagger.tagger_utils import load_tokenizer
 
 
 def simple_split_batching(text: str, token_batch_size: int, show_progress: bool):
@@ -10,16 +13,17 @@ def simple_split_batching(text: str, token_batch_size: int, show_progress: bool)
     iterator = range(0, len(tokens), token_batch_size)
     batch_count = ceil(len(tokens) / token_batch_size)
 
-    if show_progress:
-        for i in tqdm(iterator, total=batch_count):
-            yield " ".join(tokens[i:i + token_batch_size])
-    else:
-        for i in range(0, len(tokens), token_batch_size):
-            yield " ".join(tokens[i:i + token_batch_size])
+    for i in tqdm(iterator, total=batch_count, disable=not show_progress):
+        yield " ".join(tokens[i:i + token_batch_size])
 
 
-def spacy_tokenize_batching(text: str, token_batch_size: int):
-    pass
+def spacy_tokenize_batching(text: str, token_batch_size: int, use_gpu: bool):
+    tokenizer = load_tokenizer(use_gpu)
+    tokens = tokenizer(text)
+    batch_count = ceil(len(tokens) / token_batch_size)
+
+    for batch in np.split(tokens, batch_count):
+        yield batch
 
 
 def simple_split_batching_directory():
@@ -32,18 +36,6 @@ def simple_split_batching_lists(text_lists: list, token_batch_size: int):
 
 def spacy_tokenize_batching_lists(text_lists: list, token_batch_size: int):
     pass
-
-
-def load_pipeline_for_tokenization(use_gpu):
-    if use_gpu:
-        spacy.require_gpu()
-    else:
-        spacy.prefer_gpu()
-
-    return spacy.load("en_core_web_sm", disable=['tagger', 'tok2vec', 'parser', 'lemmatizer', 'ner'])
-
-
-from glob import glob
 
 
 def read_directory_of_text_files(dir_path):

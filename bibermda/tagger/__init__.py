@@ -1,4 +1,4 @@
-from .tagger import load_pipeline, tag_string, tag_large_string
-from .tagger_parallel import tag_string_parallel
+from .tagger import load_config, load_pipeline, tag_text
+from .tag_frequencies import calculate_tag_frequencies
 
-__all__ = ['load_pipeline', 'tag_string', 'tag_large_string', 'tag_string_parallel']
+__all__ = ['load_config', 'load_pipeline', 'tag_text', 'calculate_tag_frequencies']

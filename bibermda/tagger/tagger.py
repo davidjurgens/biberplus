@@ -1,67 +1,74 @@
 import sys
 
-import numpy as np
-import pandas as pd
-import spacy
+from bibermda.tagger.function_words_tagger import FunctionWordsTagger
+from bibermda.tagger.grieve_clarke_tagger import GrieveClarkeTagger
 
 sys.path.append('../..')
 
 from bibermda.tagger.data_io import simple_split_batching
-from bibermda.tagger.tagger_utils import build_variable_dictionaries
-from bibermda.tagger.word_tagger import WordTagger
-from math import ceil
+from bibermda.tagger.tagger_utils import build_variable_dictionaries, load_config, load_pipeline
+from bibermda.tagger.biber_tagger import BiberTagger
+from multiprocessing import Pool
+from tqdm import tqdm
 
 
-def tag_large_string(pipeline, text, out_tsv, token_batch_size=1000, show_progress=False):
+def tag_text(text, pipeline=None, config=None):
+    """
+    :param text: The text to tag
+    :param pipeline: Spacy pipeline
+    :param config: The settings/parameters for the tagging
+    :return: List of tagged words where each word is a dictionary of values
+    """
+    config = config or load_config()
+    pipeline = pipeline or load_pipeline(config)
     patterns_dict = build_variable_dictionaries()
     all_tagged = []
 
-    for text_batch in simple_split_batching(text, token_batch_size, show_progress):
-        doc = pipeline(text_batch)
-        word_tagger = WordTagger(words=list(doc), patterns_dict=patterns_dict)
-        word_tagger.run_all()
-        all_tagged.extend(word_tagger.tagged_words)
+    # No need to batch / parallelize small texts
+    if len(text.split(' ')) < config['processing_size'] * 10:  # Arbitrary cutoff
+        return tag_batch(text, config, patterns_dict, pipeline)
 
-    df = pd.DataFrame(all_tagged)
-    df.to_csv(out_tsv, sep='\t', index=False, compression='gzip')
+    if config['n_processes'] > 1:
+        return tag_text_parallel(text, config)
+
+    for text_batch in simple_split_batching(text, config['processing_size'], config['show_progress']):
+        all_tagged.extend(tag_batch(text_batch, config, patterns_dict, pipeline))
+
+    return all_tagged
 
 
-def tag_string_batched(pipeline, text, token_batch_size=1000, n_cpu=1, show_progress=False):
+def tag_text_parallel(text, config):
     patterns_dict = build_variable_dictionaries()
 
-    for text_batch in simple_split_batching(text, token_batch_size, show_progress):
-        if n_cpu == 1:
-            doc = pipeline(text_batch)
-            word_tagger = WordTagger(words=list(doc), patterns_dict=patterns_dict)
-        else:
-            # TODO: Test further before adding to the documentation
-            words = []
-            # Split the batch and run on multiple CPUS
-            tokens = text_batch.split(' ')
-            num_batches = ceil(len(tokens) / n_cpu)
-            token_batches = np.array_split(tokens, num_batches)
-            split_texts = [" ".join(batch) for batch in token_batches]
+    # Split the text into batches
+    process_args = []
 
-            for doc in pipeline.pipe(split_texts, n_process=n_cpu, batch_size=500):
-                words.extend(list(doc))
-            word_tagger = WordTagger(words, patterns_dict)
+    for text_batch in simple_split_batching(text, config['processing_size'], show_progress=False):
+        process_args.append((text_batch, config, patterns_dict, None))
 
-        word_tagger.run_all()
-        yield word_tagger
+    all_tagged = []
+
+    with Pool(config['n_processes']) as p:
+        for tagged_words in p.starmap(tag_batch,
+                                      tqdm(process_args, total=len(process_args), disable=not config['show_progress'])):
+            all_tagged.extend(tagged_words)
+
+    return all_tagged
 
 
-def tag_string(pipeline, text):
-    patterns_dict = build_variable_dictionaries()
-    doc = pipeline(text)
-    word_tagger = WordTagger(words=list(doc), patterns_dict=patterns_dict)
-    word_tagger.run_all()
-    return word_tagger.tagged_words
+def tag_batch(text_batch, config, patterns_dict, pipeline=None):
+    # Cannot pass in the same pipeline to multiple processes...
+    pipeline = pipeline or load_pipeline(config)
+    doc = pipeline(text_batch)
+    tagged_words = [word2dict(word) for word in list(doc)]
+    if config['biber']:
+        tagged_words = BiberTagger(tagged_words, patterns_dict).run_all()
+    if config['grieve_clarke']:
+        tagged_words = GrieveClarkeTagger(tagged_words, patterns_dict).run_all()
+    if config['function_words']:
+        tagged_words = FunctionWordsTagger(tagged_words, config['function_words_list']).tag()
+    return tagged_words
 
 
-def load_pipeline(use_gpu):
-    if use_gpu:
-        spacy.require_gpu()
-    else:
-        spacy.prefer_gpu()
-
-    return spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
+def word2dict(word):
+    return {'text': word.text, 'upos': word.pos_, 'xpos': word.tag_, 'tags': []}
