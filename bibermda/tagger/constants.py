@@ -75,7 +75,7 @@ DOC_TAGS = [
 ]
 
 GRIEVE_CLARK_TAGS = [
-    
+
 ]
 
 # Keep track of all the acronyms in one spot

@@ -39,4 +39,3 @@ def tag_function_words(words, function_words=None, return_vector=False):
     if return_vector:
         return [function_word_counts[word] for word in function_words]
     return function_word_counts
-

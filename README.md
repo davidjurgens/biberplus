@@ -70,7 +70,7 @@ as a variable. The default list of function words can be found at `bibermda/tagg
 from bibermda.tagger import load_config, calculate_tag_frequencies
 
 config = load_config()
-config.update({'use_gpu': True, 'biber': False, 'grieve_clarke': False})
+config.update({'use_gpu': True, 'biber': False, 'function_words': True})
 frequencies_df = calculate_tag_frequencies(text)
 ```
 
@@ -117,7 +117,7 @@ from bibermda.tagger import load_config, load_pipeline, calculate_tag_frequencie
 from bibermda.reducer import tags_pca
 
 config = load_config()
-config.update({'use_gpu': True, 'function_words': True})
+config.update({'use_gpu': True, 'biber': True, 'function_words': True})
 pipeline = load_pipeline(config)
 frequencies_df = calculate_tag_frequencies(text, pipeline, config)
 
