@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     package_data={'': ['tagger/constants/*.txt', 'tagger/config.yaml']},
     install_requires=['pandas', 'numpy', 'spacy', 'tqdm',
-                      'blis', 'confection', 'PyYAML',
+                      'blis', 'confection', 'PyYAML', 'factor_analyzer',
                       'en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl'],
     python_requires='>=3.6',
     classifiers=[
