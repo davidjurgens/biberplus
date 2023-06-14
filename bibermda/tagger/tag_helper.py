@@ -80,8 +80,42 @@ class TagHelper:
         return "Tense=Past" in word['feats']
 
     @staticmethod
+    def is_indefinite_article(word):
+        return "Definite=Ind" in word['feats']
+
+    @staticmethod
+    def is_infinitive(word):
+        return "VerbForm=Inf" in word['feats']
+
+    @staticmethod
     def is_possesive_pronoun(word):
         return word['xpos'] == 'PRP$' or word['xpos'] == 'WP$'
+
+    @staticmethod
+    def is_article(word):
+        return "PronType=Art" in word['feats']
+
+    @staticmethod
+    def is_subject_pronoun(word):
+        return "PronType=Prs" in word['feats']
+
+    @staticmethod
+    def is_accusative_case(word):
+        return "Case=Acc" in word['feats']
+
+    @staticmethod
+    def is_progressive_aspect(word):
+        return "Aspect=Prog" in word['feats']
+
+    @staticmethod
+    def is_comparative_adjective(word):
+        return "Degree=Cmp" in word['feats']
+    @staticmethod
+    def is_superlative_adjective(word):
+        return "Degree=Sup" in word['feats']
+    @staticmethod
+    def is_non_pos(word):
+        return word['upos'] == 'X'
 
     def is_quantifier(self, word):
         return word['text'].lower() in self.patterns['quantifiers']

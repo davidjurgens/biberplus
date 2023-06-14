@@ -74,10 +74,9 @@ DOC_TAGS = [
     'RB'
 ]
 
-GRIEVE_CLARK_TAGS = [
+BIBER_PLUS_TAGS = [
 
 ]
-
 # Keep track of all the acronyms in one spot
 MDA_ACRONYMS = {
     'XXO': 'Analytic Negation',

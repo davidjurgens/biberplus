@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from bibermda.tagger import tag_text
-from bibermda.tagger.constants import BIBER_TAGS, GRIEVE_CLARK_TAGS
+from bibermda.tagger.constants import BIBER_TAGS
 from bibermda.tagger.tagger_utils import load_config, load_pipeline, build_variable_dictionaries
 
 
@@ -57,6 +57,22 @@ def count_tags_every_n_tokens(tagged_df, tag_counts, tags, config):
     return tag_counts
 
 
+def count_tags_every_n_tokens_binary(tagged_df, tag_counts, tags, config):
+    num_batches = ceil(len(tagged_df) / config['token_normalization'])
+
+    for index, batch in enumerate(np.array_split(tagged_df, num_batches)):
+        if index != num_batches - 1:
+            tag_counts = update_tag_counts(batch, tag_counts, tags=tags)
+        else:
+            # Ignore the last batch if it's too small, otherwise scale up tag frequencies
+            percent = len(batch) / config['token_normalization']
+            if percent > config['drop_last_batch_pct']:
+                tag_counts = update_tag_counts(batch, tag_counts, tags,
+                                               weight=config['token_normalization'] / len(batch))
+
+    return tag_counts
+
+
 def update_tag_counts(tagged_df, tag_counts, tags, weight=1.):
     curr_counts = pd.Series(functools.reduce(operator.iconcat, tagged_df.tags, []),
                             dtype=pd.StringDtype()).value_counts().to_dict()
@@ -73,6 +89,19 @@ def update_tag_counts(tagged_df, tag_counts, tags, weight=1.):
     tag_counts['TTR'].append(calculate_type_token_ratio(tagged_df))
 
     return tag_counts
+
+
+def update_binary_tag_counts(tagged_df, binary_tag_counts):
+    curr_binary_counts = pd.Series(functools.reduce(operator.iconcat, tagged_df.tags, []),
+                                   dtype=pd.StringDtype()).value_counts().to_dict()
+
+    for tag in BINARY_TAGS:
+        if tag in curr_binary_counts:
+            binary_tag_counts[tag].append(1)
+        else:
+            binary_tag_counts[tag].append(0)
+
+    return binary_tag_counts
 
 
 def calculate_total_adverbs(tagged_df):
@@ -96,8 +125,8 @@ def load_tags(config):
     tags = []
     if config['biber']:
         tags.extend(BIBER_TAGS)
-    if config['grieve_clarke']:
-        tags.extend(GRIEVE_CLARK_TAGS)
+    if config['binary_tags']:
+        tags.extend(BINARY_TAGS)
 
     if config['function_words']:
         fw = config['function_words_list'] if config['function_words_list'] else build_variable_dictionaries()[

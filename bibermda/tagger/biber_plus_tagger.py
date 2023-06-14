@@ -1,5 +1,5 @@
 import inspect
-from copy import deepcopy
+import re
 
 import numpy as np
 
@@ -7,7 +7,7 @@ from bibermda.tagger.biber_run_order import RUN_ORDER
 from bibermda.tagger.tag_helper import TagHelper
 
 
-class BiberTagger:
+class BiberPlusTagger:
     def __init__(self, tagged_words, patterns_dict, ttr_n=400):
         """
             :param tagged_words: Words in the form of a dictionary
@@ -727,14 +727,14 @@ class BiberTagger:
                         return "THATD"
 
             # PUBV|PRIV|SUAV + JJ|PRED|ADV|DT|QUAN|CD|PRP$ + N + V|AUXV
+            # PUBV|PRIV|SUAV + JJ|PRED|ADV|DT|QUAN|CD|PRP$ + N + V|AUXV
             if next_words[2]:
-                temp = deepcopy(previous_words)
-                temp.insert(0, word)
-                if next_words[2]['xpos'] in ['JJ', 'DT', 'CD', 'PRP$'] or self.helper.is_adverb(next_words[2]) or \
-                        self.tag_pred(next_words[0], temp, next_words[1:]) or \
+                next_word_2 = next_words[2]
+                if next_word_2['xpos'] in ['JJ', 'DT', 'CD', 'PRP$'] or self.helper.is_adverb(next_word_2) or \
+                        self.tag_pred(next_words[0], [word] + previous_words, next_words[1:]) or \
                         self.helper.is_quantifier(next_words[0]):
-                    if self.helper.is_noun(next_words[1]) and (self.helper.is_verb(next_words[2]) or
-                                                               self.helper.is_auxiliary(next_words[2])):
+                    if self.helper.is_noun(next_words[1]) and (self.helper.is_verb(next_word_2) or
+                                                               self.helper.is_auxiliary(next_word_2)):
                         return "THATD"
 
             # PUBV|PRIV|SUAV + JJ|PRED|ADV|DT|QUAN|CD|PRP$ + (ADJ) + N + V|AUXV
@@ -846,3 +846,124 @@ class BiberTagger:
     def tag_qupr(self, word, previous_words, next_words):
         if self.helper.is_quantifier_pronoun(word):
             return "QUPR"
+
+    def tag_articles(self, word, previous_words, next_words):
+        if self.helper.is_article(word):
+            return "ART"
+
+    def tag_auxillary_be(self, word, previous_words, next_words):
+        if word['text'].lower() in self.patterns['be'] and self.helper.is_auxiliary(word):
+            return "AUXB"
+
+    def tag_capitalizations(self, word, previous_words, next_words):
+        if word['text'][0].isupper():
+            return "CAP"
+
+    def tag_subordinating_conjunctions(self, word, previous_words, next_words):
+        if self.helper.is_subordinating_conjunction(word):
+            return "SCONJ"
+
+    def tag_coordinating_conjunctions(self, word, previous_words, next_words):
+        if self.helper.is_coordinating_conjunction(word):
+            return 'CCONJ'
+
+    def tag_determiners(self, word, previous_words, next_words):
+        if self.helper.is_determiner(word):
+            return 'DET'
+
+    def tag_emoji(self, word, previous_words, next_words):
+        emoji_pattern = re.compile('[\U00010000-\U0010ffff]', flags=re.UNICODE)
+        if re.search(emoji_pattern, word['text']):
+            return 'EMOJ'
+
+    def tag_emoticon(self, word, previous_words, next_words):
+        if self.helper.is_punctuation(word):
+            emoticon_pattern = re.compile('[:;=](?:-)?[)DPp\/]')
+            if re.search(emoticon_pattern, word['text']):
+                return 'EMOT'
+
+    def tag_exclamation_mark(self, word, previous_words, next_words):
+        if word['text'] == '!':
+            return 'EXCL'
+
+    def tag_hashtag(self, word, previous_words, next_words):
+        if word['text'][0] == '#':
+            return 'HASH'
+
+    def tag_infinitives(self, word, previous_words, next_words):
+        if self.helper.is_infinitive(word):
+            return "INF"
+
+    def tag_interjection(self, word, previous_words, next_words):
+        if word['xpos'] == 'UH':
+            return "UH"
+
+    def tag_numeral(self, word, previous_words, next_words):
+        if self.helper.is_numeral(word):
+            return "NUM"
+
+    def tag_laughter_acronyms(self, word, previous_word, next_words):
+        if word['text'].lower() in self.patterns['laughter_acronyms']:
+            return "LAUGH"
+
+    def tag_possessive_pronoun(self, word, previous_words, next_words):
+        if word['xpos'][:3] == 'PRP':
+            return 'PRP'
+
+    def tag_preposition(self, word, previous_words, next_words):
+        if self.helper.is_preposition(word):
+            return "PREP"
+
+    def tag_proper_noun(self, word, previous_words, next_words):
+        if word['xpos'][:3] == 'NNP':
+            return "NNP"
+
+    def tag_question_mark(self, word, previous_words, next_words):
+        if word['text'] == '?':
+            return 'QUES'
+
+    def tag_quotation_mark(self, word, previous_words, next_words):
+        if word['text'] == "'" or word['text'] == '"':
+            return "QUOT"
+
+    def tag_at(self, word, previous_words, next_words):
+        if word['text'][0] == '@':
+            return 'AT'
+
+    def tag_subject_pronouns(self, word, previous_words, next_words):
+        if self.helper.is_subject_pronoun(word):
+            return "SBJP"
+
+    def tag_url(self, word, previous_words, next_words):
+        url_pattern = "(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
+        if re.search(url_pattern, word['text']):
+            return "URL"
+
+    def tag_wh_word(self, word, previous_words, next_words):
+        if word['xpos'][0] == 'W':
+            return "WH"
+
+    def tag_indefinite_article(self, word, previous_words, next_words):
+        if self.helper.is_indefinite_article(word):
+            return "INDA"
+
+    def tag_accusative_case(self, word, previous_words, next_words):
+        if self.helper.is_accusative_case(word):
+            return "ACCU"
+
+    def tag_progressive_aspect(self, word, previous_words, next_words):
+        if self.helper.is_progressive_aspect(word):
+            return "PGAS"
+
+    def tag_comparative(self, word, previous_words, next_words):
+        if self.helper.is_comparative_adjective(word):
+            return "CMADJ"
+
+    def tag_superlative(self, word, previous_words, next_words):
+        """ Noun (subject) + verb + the + superlative adjective + noun (object) """
+        if self.helper.is_superlative_adjective(word):
+            return "SPADJ"
+
+    def tag_non_pos(self, word, previous_words, next_words):
+        if self.helper.is_non_pos(word):
+            return 'X'

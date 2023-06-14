@@ -3,11 +3,10 @@ import sys
 sys.path.append('../..')
 
 from bibermda.tagger.function_words_tagger import FunctionWordsTagger
-from bibermda.tagger.grieve_clarke_tagger import GrieveClarkeTagger
 
 from bibermda.tagger.data_io import simple_split_batching
 from bibermda.tagger.tagger_utils import build_variable_dictionaries, load_config, load_pipeline
-from bibermda.tagger.biber_tagger import BiberTagger
+from bibermda.tagger.biber_plus_tagger import BiberPlusTagger
 from multiprocessing import Pool
 from tqdm import tqdm
 
@@ -61,14 +60,19 @@ def tag_batch(text_batch, config, patterns_dict, pipeline=None):
     pipeline = pipeline or load_pipeline(config)
     doc = pipeline(text_batch)
     tagged_words = [word2dict(word) for word in list(doc)]
-    if config['biber']:
-        tagged_words = BiberTagger(tagged_words, patterns_dict).run_all()
-    if config['grieve_clarke']:
-        tagged_words = GrieveClarkeTagger(tagged_words, patterns_dict).run_all()
     if config['function_words']:
         tagged_words = FunctionWordsTagger(tagged_words, config['function_words_list']).tag()
+
+    if config['biber'] or config['binary_tags']:
+        tagged_words = BiberPlusTagger(tagged_words, patterns_dict).run_all()
+    # if config['binary_tags']:
+    #     tagged_words = BinaryTagger(tagged_words, config['token_normalization'], patterns_dict).run_all()
     return tagged_words
 
 
 def word2dict(word):
-    return {'text': word.text, 'upos': word.pos_, 'xpos': word.tag_, 'tags': []}
+    return {'text': word.text,
+            'upos': word.pos_,
+            'xpos': word.tag_,
+            'feats': word.morph if word.morph else "",
+            'tags': []}
