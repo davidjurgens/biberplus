@@ -1,4 +1,4 @@
-BIBER_TAGS = [
+BIBER_PLUS_TAGS = [
     'QUAN',
     'QUPR',
     'AMP',
@@ -65,7 +65,36 @@ BIBER_TAGS = [
     'THATD',
     'WHOBJ',
     'WHSUB',
-    'WHCL'
+    'WHCL',
+    'ART',
+    'AUXB',
+    'CAP',
+    'SCONJ',
+    'CCONJ',
+    'DET',
+    'EMOJ',
+    'EMOT',
+    'EXCL',
+    'HASH',
+    'INF',
+    'UH',
+    'NUM',
+    'LAUGH',
+    'PRP',
+    'PREP',
+    'NNP',
+    'QUES',
+    'QUOT',
+    'AT',
+    'SBJP',
+    'URL',
+    'WH',
+    'INDA',
+    'ACCU',
+    'PGAS',
+    'CMADJ',
+    'SPADJ',
+    'X'
 ]
 
 DOC_TAGS = [
@@ -74,9 +103,6 @@ DOC_TAGS = [
     'RB'
 ]
 
-BIBER_PLUS_TAGS = [
-
-]
 # Keep track of all the acronyms in one spot
 MDA_ACRONYMS = {
     'XXO': 'Analytic Negation',
