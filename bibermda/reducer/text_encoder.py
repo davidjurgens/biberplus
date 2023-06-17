@@ -12,13 +12,13 @@ def encode_text(config, text):
     # Split the counts by type
     if config['binary_tags']:
         binary_frequencies = frequencies_df[frequencies_df['tag'].isin(binary_tags)]
-        encodings['binary'] = binary_frequencies[['mean', 'std']].to_numpy().flatten()
+        encodings['binary'] = binary_frequencies[['mean', 'std']].to_numpy().flatten().tolist()
 
     if config['function_words']:
         fw_frequencies = frequencies_df[~frequencies_df['tag'].isin(biber_tags + binary_tags)]
-        encodings['function_words'] = fw_frequencies.drop('tag', axis=1).to_numpy().flatten()
+        encodings['function_words'] = fw_frequencies.drop('tag', axis=1).to_numpy().flatten().tolist()
 
     frequencies_df = frequencies_df[frequencies_df['tag'].isin(biber_tags)]
-    encodings['biber'] = frequencies_df.drop('tag', axis=1).to_numpy().flatten()
+    encodings['biber'] = frequencies_df.drop('tag', axis=1).to_numpy().flatten().tolist()
 
     return encodings
