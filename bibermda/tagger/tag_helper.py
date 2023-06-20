@@ -110,9 +110,11 @@ class TagHelper:
     @staticmethod
     def is_comparative_adjective(word):
         return "Degree=Cmp" in word['feats']
+
     @staticmethod
     def is_superlative_adjective(word):
         return "Degree=Sup" in word['feats']
+
     @staticmethod
     def is_non_pos(word):
         return word['upos'] == 'X'
