@@ -9,7 +9,7 @@
 
 Install the pip package using the GitHub link
 
-```pip install git+https://github.com/davidjurgens/biber-multidimensional-register-analysis```
+```pip install git+https://github.com/davidjurgens/biberplus```
 
 Once tha package is public...
 
@@ -20,11 +20,13 @@ Once tha package is public...
 For large text processing make sure to enable GPU with the `use_gpu` flag in the configuration. To use multiple
 CPUs, set `n_processes` in the configuration.
 
+For tagging millions of smaller texts (e.g. tweets or Reddit comments) check out the examples in `corpora_tagging`
+
 ### Biber Tagger
 
 The default return value is a DataFrame containing the frequencies per linguistic tag for every N tokens.
 The tagger will calculate the mean, min, max, range, and standard deviation of tag counts. We use Biber's default of
-counting per 1,000 tokens
+counting per 1,000 tokens. For social media text, we recommend you reduce the value to 100 and use the binary features
 
 **Tag a string with the default configuration**
 
@@ -52,8 +54,14 @@ frequencies_df = calculate_tag_frequencies(text, pipeline, config)
 If you are calling `tag_text` on many strings, load in the Spacy pipeline once with `load_pipeline`
 
 ```python
-from biberplus.tagger import tag_text
+from biberplus.tagger import tag_text, load_config, load_pipeline
 
+# If you're calling tag_text repeatedly, load in the pipeline only once to improve performance
+config = load_config()
+pipeline = load_pipeline(config)
+tagged_words = tag_text(text, pipeline=pipeline)
+
+# Otherwise call tax_text directly
 tagged_words = tag_text(text)
 ```
 
