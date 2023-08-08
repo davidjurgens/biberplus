@@ -1,0 +1,1 @@
+accelerate launch --num_processes=7 main.py --wandb --run_name xlm-roberta-base-resumed-64 --style_dimensions 64 --tokenizer='xlm-roberta-base' --num_warmup_steps=200 --grad_acc 100 --gradient_checkpointing true --epochs 10 --pretrained_model '/shared/3/projects/hiatus/models/multilingual/xlm-roberta-base-64/last/' --evaluate --batch_size 16 --eval_batch_size 16 --saving_step 200
