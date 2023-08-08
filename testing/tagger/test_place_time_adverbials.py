@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from bibermda.tagger import tag_text
+from biberplus.tagger import tag_text
 
 
 class TestPlaceTimeAdverbialFunctions(unittest.TestCase):

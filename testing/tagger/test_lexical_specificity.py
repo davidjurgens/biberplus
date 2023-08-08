@@ -3,8 +3,8 @@ from unittest.mock import patch
 import spacy
 import pandas as pd
 
-from bibermda.tagger.tag_frequencies import *
-from bibermda.tagger.biber_plus_tagger import BiberPlusTagger
+from biberplus.tagger.tag_frequencies import *
+from biberplus.tagger.biber_plus_tagger import BiberPlusTagger
 
 
 class TestLexicalSpecificityFunctions(unittest.TestCase):

@@ -13,7 +13,7 @@ Install the pip package using the GitHub link
 
 Once tha package is public...
 
-```pip install bibermda```
+```pip install biberplus```
 
 ## Quickstart Examples
 
@@ -29,7 +29,7 @@ counting per 1,000 tokens
 **Tag a string with the default configuration**
 
 ```python
-from bibermda.tagger import calculate_tag_frequencies
+from biberplus.tagger import calculate_tag_frequencies
 
 frequencies_df = calculate_tag_frequencies(text)
 ```
@@ -39,7 +39,7 @@ frequencies_df = calculate_tag_frequencies(text)
 Use the GPU and multi-processing to speed things up. Modify from the default configuration.
 
 ```python
-from bibermda.tagger import load_config, load_pipeline, calculate_tag_frequencies
+from biberplus.tagger import load_config, load_pipeline, calculate_tag_frequencies
 
 config = load_config()
 config.update({'use_gpu': True, 'n_processes': 4, 'function_words': False})
@@ -52,7 +52,7 @@ frequencies_df = calculate_tag_frequencies(text, pipeline, config)
 If you are calling `tag_text` on many strings, load in the Spacy pipeline once with `load_pipeline`
 
 ```python
-from bibermda.tagger import tag_text
+from biberplus.tagger import tag_text
 
 tagged_words = tag_text(text)
 ```
@@ -64,10 +64,10 @@ tagged_words = tag_text(text)
 **Using the default list provided**
 
 The default behavior uses 100 of the most frequent function words. You may pass in your own list of functions words as
-as a variable. The default list of function words can be found at `bibermda/tagger/constants/function_words.txt`
+as a variable. The default list of function words can be found at `biberplus/tagger/constants/function_words.txt`
 
 ```python
-from bibermda.tagger import load_config, calculate_tag_frequencies
+from biberplus.tagger import load_config, calculate_tag_frequencies
 
 config = load_config()
 config.update({'use_gpu': True, 'biber': False, 'function_words': True})
@@ -77,7 +77,7 @@ frequencies_df = calculate_tag_frequencies(text)
 **Using your own list**
 
 ```python
-from bibermda.tagger import load_config, calculate_tag_frequencies
+from biberplus.tagger import load_config, calculate_tag_frequencies
 
 function_words = [...]
 config = load_config()
@@ -97,8 +97,8 @@ The output length of the vector is dependent on the input options
 **Biber + Function Words example embedding**
 
 ```python
-from bibermda.tagger import load_config
-from bibermda.reducer import encode_text
+from biberplus.tagger import load_config
+from biberplus.reducer import encode_text
 
 config = load_config()
 embedding = encode_text(text, config)
@@ -113,8 +113,8 @@ embedding = encode_text(text, config)
 **Biber + Function Words PCA**
 
 ```python
-from bibermda.tagger import load_config, load_pipeline, calculate_tag_frequencies
-from bibermda.reducer import tags_pca
+from biberplus.tagger import load_config, load_pipeline, calculate_tag_frequencies
+from biberplus.reducer import tags_pca
 
 config = load_config()
 config.update({'use_gpu': True, 'biber': True, 'function_words': True})

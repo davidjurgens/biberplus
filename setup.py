@@ -1,15 +1,16 @@
 from setuptools import setup
 
 setup(
-    name='bibermda',
-    version='0.2.0',
-    description='A pure Python implementation of Biber\'s (1988) Variation across Speech and Writing linguistic tags',
-    url='https://github.com/davidjurgens/biber-multidimensional-register-analysis',
+    name='biberplus',
+    version='0.3.0',
+    description='A pure Python implementation of Biber\'s (1988) Variation across Speech and Writing linguistic '
+                'tags with additional features',
+    url='https://github.com/davidjurgens/biberplus',
     author='Kenan Alkiek, David Jurgens',
     author_email='kalkiek@umich.edu',
     license='MIT License',
-    packages=['bibermda', 'bibermda.tagger', 'bibermda.reducer'],
-    py_modules=['bibermda', 'bibermda.tagger', 'bibermda.reducer'],
+    packages=['biberplus', 'biberplus.tagger', 'biberplus.reducer'],
+    py_modules=['biberplus', 'biberplus.tagger', 'biberplus.reducer'],
     include_package_data=True,
     package_data={'': ['tagger/constants/*.txt', 'tagger/config.yaml']},
     install_requires=['pandas', 'numpy', 'spacy', 'tqdm',
