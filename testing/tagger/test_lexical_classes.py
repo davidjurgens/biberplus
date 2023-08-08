@@ -16,6 +16,18 @@ class TestLexicalClassesFunctions(unittest.TestCase):
         # Instead should be tagged as CONJ
         self.assertIn('CONJ', tagged_words[10]['tags'])
 
+    def test_conj_altogether(self):
+        text = "The event was well organized . Altogether, it was a success."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Altogether should be tagged as CONJ when it is preceded by punctuation
+        self.assertIn('CONJ', tagged_words[6]['tags'])
+
+    def test_conj_rather(self):
+        text = "The movie was okay . Rather, it exceeded my expectations."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Rather should be tagged as CONJ when it is preceded by punctuation
+        self.assertIn('CONJ', tagged_words[5]['tags'])
+
     def test_dwnt(self):
         text = 'a tangent point , and at such a point can only change by an even integer . Thus the multiplicity'
         tagged_words = tag_text(text, pipeline=self.pipeline)
@@ -27,6 +39,18 @@ class TestLexicalClassesFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         # Maybe should be tagged as a HDG
         self.assertIn('HDG', tagged_words[10]['tags'])
+
+    def test_hdg_single_word(self):
+        text = 'I think maybe he went to the park.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Maybe should be tagged as HDG
+        self.assertIn('HDG', tagged_words[2]['tags'])
+
+    def test_hdg_two_word(self):
+        text = 'It was at about 5pm yesterday'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Kind should be tagged as HDG in the phrase "kind of"
+        self.assertIn('HDG', tagged_words[2]['tags'])
 
     def test_three_word_hdg(self):
         text = 'that blow to be borderline . To kayo him and more or less or maybe not kill . You hit again about'
@@ -46,6 +70,18 @@ class TestLexicalClassesFunctions(unittest.TestCase):
         # Such should be tagged as a EMPH
         self.assertIn('EMPH', tagged_words[10]['tags'])
 
+    def test_emph_does(self):
+        text = 'He really does like the cake.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Does should be tagged as a EMPH
+        self.assertIn('EMPH', tagged_words[2]['tags'])
+
+    def test_emph_so(self):
+        text = 'She is so happy about the surprise.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # So should be tagged as a EMPH
+        self.assertIn('EMPH', tagged_words[2]['tags'])
+
     def test_two_word_emph(self):
         text = 'not be subjected to such a risk , or that for sure a possibility should not be permitted to endanger the'
         tagged_words = tag_text(text, pipeline=self.pipeline)
@@ -63,6 +99,18 @@ class TestLexicalClassesFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         # This should be tagged as DEMO
         self.assertIn('DEMO', tagged_words[10]['tags'])
+
+    def test_demo_this(self):
+        text = "a little bigger than i expected . I just purchased this item and I have not found anywhere on the"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # This should be tagged as DEMO
+        self.assertIn('DEMO', tagged_words[10]['tags'])
+
+    def test_demo_these(self):
+        text = "Those shoes look great. However, these ones seem to be more comfortable."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # These should be tagged as DEMO
+        self.assertIn('DEMO', tagged_words[7]['tags'])
 
 
 if __name__ == '__main__':

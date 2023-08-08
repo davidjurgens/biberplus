@@ -1,14 +1,14 @@
 import sys
+from multiprocessing import Pool
+
+from tqdm import tqdm
 
 sys.path.append('../..')
 
 from bibermda.tagger.function_words_tagger import FunctionWordsTagger
-
 from bibermda.tagger.data_io import simple_split_batching
 from bibermda.tagger.tagger_utils import build_variable_dictionaries, load_config, load_pipeline
 from bibermda.tagger.biber_plus_tagger import BiberPlusTagger
-from multiprocessing import Pool
-from tqdm import tqdm
 
 
 def tag_text(text, pipeline=None, config=None):
@@ -56,17 +56,24 @@ def tag_text_parallel(text, config):
 
 
 def tag_batch(text_batch, config, patterns_dict, pipeline=None):
-    # Cannot pass in the same pipeline to multiple processes...
+    """Tag a batch of text."""
     pipeline = pipeline or load_pipeline(config)
     doc = pipeline(text_batch)
-    tagged_words = [word2dict(word) for word in list(doc)]
-    if config['function_words']:
-        tagged_words = FunctionWordsTagger(tagged_words, config['function_words_list']).tag()
+    tagged_words = [word2dict(word) for word in doc]
+    tagged_words = tag_function_words(tagged_words, config)
+    tagged_words = tag_biber_and_binary(tagged_words, patterns_dict, config)
+    return tagged_words
 
+
+def tag_function_words(tagged_words, config):
+    if config['function_words']:
+        return FunctionWordsTagger(tagged_words, config['function_words_list']).tag()
+    return tagged_words
+
+
+def tag_biber_and_binary(tagged_words, patterns_dict, config):
     if config['biber'] or config['binary_tags']:
-        tagged_words = BiberPlusTagger(tagged_words, patterns_dict).run_all()
-    # if config['binary_tags']:
-    #     tagged_words = BinaryTagger(tagged_words, config['token_normalization'], patterns_dict).run_all()
+        return BiberPlusTagger(tagged_words, patterns_dict).run_all()
     return tagged_words
 
 

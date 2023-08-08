@@ -18,7 +18,7 @@ class TestPlaceTimeAdverbialFunctions(unittest.TestCase):
         self.assertIn('PLACE', tagged_words[10]['tags'])
 
     def test_time(self):
-        text = 'so the thermostat opens , and then look for leaks again . Be sure the bugs and dirt are blown'
+        text = 'so the thermostat opens, and then look for leaks again. Be sure the bugs and dirt are blown'
         tagged_words = tag_text(text, pipeline=self.pipeline)
         # Again should be tagged as a TIME
         self.assertIn('TIME', tagged_words[10]['tags'])
@@ -47,6 +47,13 @@ class TestPlaceTimeAdverbialFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         # Since should be tagged as an OSUB
         self.assertIn('OSUB', tagged_words[10]['tags'])
+
+    def test_osub_since(self):
+        text = 'his comment on the planter dynasties as they have existed since the decades before the Civil War . It may'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Since should be tagged as an OSUB
+        self.assertIn('OSUB', tagged_words[10]['tags'])
+
 
 
 if __name__ == '__main__':

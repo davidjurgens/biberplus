@@ -16,8 +16,11 @@ class TestStativeFormFunctions(unittest.TestCase):
         # 'Be' should be tagged as BEMA
         self.assertIn('BEMA', tagged_words[10]['tags'])
 
-    def test_ex(self):
-        pass
+    def test_bema_directly_followed(self):
+        text = 'They are wonderful people to work with.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'Are' should be tagged as BEMA because it's followed directly by an adjective (JJ) - "wonderful".
+        self.assertIn('BEMA', tagged_words[1]['tags'])
 
 
 if __name__ == '__main__':

@@ -5,71 +5,71 @@ class TagHelper:
 
     @staticmethod
     def is_adjective(word):
-        return word['upos'] == 'ADJ'
+        return word and word['upos'] == 'ADJ'
 
     @staticmethod
     def is_adposition(word):
-        return word['upos'] == 'ADP'
+        return word and word['upos'] == 'ADP'
 
     @staticmethod
     def is_adverb(word):
-        return word['upos'] == 'ADV'
+        return word and word['upos'] == 'ADV'
 
     @staticmethod
     def is_auxiliary(word):
-        return word['upos'] == 'AUX'
+        return word and word['upos'] == 'AUX'
 
     @staticmethod
     def is_coordinating_conjunction(word):
-        return word['upos'] == 'CCONJ'
+        return word and word['upos'] == 'CCONJ'
 
     @staticmethod
     def is_determiner(word):
-        return word['upos'] == 'DET'
+        return word and word['upos'] == 'DET'
 
     @staticmethod
     def is_interjection(word):
-        return word['upos'] == 'INTJ'
+        return word and word['upos'] == 'INTJ'
 
     @staticmethod
     def is_noun(word):
-        return word['upos'] == 'NOUN'
+        return word and word['upos'] == 'NOUN'
 
     @staticmethod
     def is_numeral(word):
-        return word['upos'] == 'NUM'
+        return word and word['upos'] == 'NUM'
 
     @staticmethod
     def is_particle(word):
-        return word['upos'] == 'PART'
+        return word and word['upos'] == 'PART'
 
     @staticmethod
     def is_pronoun(word):
-        return word['upos'] == 'PRON'
+        return word and word['upos'] == 'PRON'
 
     @staticmethod
     def is_proper_noun(word):
-        return word['upos'] == 'PROPN'
+        return word and word['upos'] == 'PROPN'
 
     @staticmethod
     def is_punctuation(word):
-        return word['upos'] == 'PUNCT'
+        return word and word['upos'] == 'PUNCT'
 
     @staticmethod
     def is_subordinating_conjunction(word):
-        return word['upos'] == 'SCONJ'
+        return word and word['upos'] == 'SCONJ'
 
     @staticmethod
     def is_symbol(word):
-        return word['upos'] == 'SYM'
+        return word and word['upos'] == 'SYM'
 
     @staticmethod
     def is_verb(word):
-        return word['upos'] == 'VERB'
+        return word and word['upos'] == 'VERB'
 
     @staticmethod
     def is_any_noun(word):
-        return word['xpos'][:2] == 'NN'
+        return word and word['xpos'].startswith('NN')
 
     @staticmethod
     def is_any_verb(word):
@@ -120,22 +120,22 @@ class TagHelper:
         return word['upos'] == 'X'
 
     def is_quantifier(self, word):
-        return word['text'].lower() in self.patterns['quantifiers']
+        return word and word['text'].lower() in self.patterns['quantifiers']
 
     def is_indefinite_pronoun(self, word):
-        return word['text'].lower() in self.patterns['indefinite_pronouns']
+        return word and word['text'].lower() in self.patterns['indefinite_pronouns']
 
     def is_quantifier_pronoun(self, word):
-        return word['text'].lower() in self.patterns['quantifier_pronouns']
+        return word and word['text'].lower() in self.patterns['quantifier_pronouns']
 
     def is_preposition(self, word):
         return word['text'].lower() in self.patterns['prepositional_phrases']
 
     def is_be(self, word):
-        return word['text'].lower() in self.patterns['be']
+        return word and word['text'].lower() in self.patterns['be']
 
     def is_do(self, word):
-        return word['text'].lower() in self.patterns['do']
+        return word and word['text'].lower() in self.patterns['do']
 
     def is_have(self, word):
-        return word['text'].lower() in self.patterns['have']
+        return word and word['text'].lower() in self.patterns['have']

@@ -75,6 +75,11 @@ class TestAdditionalFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn('UH', tagged_words[0]['tags'])
 
+    def test_interjections_end(self):
+        text = "That's a great idea, right?"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn('UH', tagged_words[-2]['tags'])
+
     def test_numerals(self):
         text = "I have three dogs and two cats."
         tagged_words = tag_text(text, pipeline=self.pipeline)
@@ -85,6 +90,17 @@ class TestAdditionalFunctions(unittest.TestCase):
         text = "His joke was so funny, LOL!"
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn('LAUGH', tagged_words[-2]['tags'])
+
+    def test_interjections_middle(self):
+        text = "I mean gosh, are you really sure about that?"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        print(tagged_words)
+        self.assertIn('UH', tagged_words[2]['tags'])
+
+    def test_interjections_end(self):
+        text = "That's a bad idea, gosh"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn('UH', tagged_words[-1]['tags'])
 
     def test_possessive_pronoun(self):
         text = "That car is hers, not mine."
@@ -123,10 +139,20 @@ class TestAdditionalFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn('SBJP', tagged_words[0]['tags'])
 
+    def test_subject_pronouns_end(self):
+        text = "The person going to the store is she"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn('SBJP', tagged_words[-1]['tags'])
+
     def test_url(self):
         text = "Check out the latest news on our website: www.example.com."
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn('URL', tagged_words[-2]['tags'])
+
+    def test_url_org(self):
+        text = "Check out the latest news on our website: https://website.org"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn('URL', tagged_words[-1]['tags'])
 
     def test_wh_word(self):
         text = "Who is coming to the party tonight?"
@@ -147,6 +173,11 @@ class TestAdditionalFunctions(unittest.TestCase):
         text = "They are studying for their exams right now."
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn('PGAS', tagged_words[2]['tags'])
+
+    def test_progressive_aspect_end(self):
+        text = "Despite the noise, they kept studying."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn('PGAS', tagged_words[-2]['tags'])
 
     def test_comparative(self):
         text = "She is taller than her sister."

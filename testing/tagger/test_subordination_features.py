@@ -16,6 +16,18 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         # That should be tagged as a THVC
         self.assertIn('THVC', tagged_words[10]['tags'])
 
+    def test_thvc_case_followed_by_determiner(self):
+        text = "I've read a few of these reviews and think that Fisher Price must have a quality control issue ."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'That' should be tagged as a THVC
+        self.assertIn('THVC', tagged_words[10]['tags'])
+
+    def test_thvc_case_preceded_by_noun_and_preposition(self):
+        text = "I heard that they had a great time at the party ."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'That' should be tagged as a THVC
+        self.assertIn('THVC', tagged_words[2]['tags'])
+
     def test_thac(self):
         text = "twice a day for 20 minutes per use . Disappointing that it failed so quickly . I have now owned"
         tagged_words = tag_text(text, pipeline=self.pipeline)
@@ -47,6 +59,15 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         # Reported should be tagged as WZPAST
         self.assertIn('WZPAST', tagged_words[10]['tags'])
 
+        text = 'The toy created by the child was innovative. However, the mechanism used in its operation was complex.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+
+        # 'created' should be tagged as WZPAST
+        self.assertIn('WZPAST', tagged_words[2]['tags'])
+
+        # Additionally, 'used' should also be tagged as WZPAST
+        self.assertIn('WZPAST', tagged_words[13]['tags'])
+
     def test_wzpres(self):
         text = "and the mean , and he sees the Compson family disintegrating from within . If the barn-burner 's " \
                "family produces"
@@ -61,6 +82,12 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         # That should be tagged as a TSUB
         self.assertIn('TSUB', tagged_words[10]['tags'])
 
+    def test_tsub_with_intervening_adverb(self):
+        text = 'The movies that often showcase historical events are thrilling. It presents a blend of facts and fiction.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # That should be tagged as TSUB
+        self.assertIn('TSUB', tagged_words[2]['tags'])
+
     def test_whsub(self):
         text = '. There are plenty of reference mentioned at the end which can be followed ' \
                'up for more curiosity . Must'
@@ -73,6 +100,11 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         # Whose should be tagged as a WHOBJ
         self.assertIn('WHOBJ', tagged_words[10]['tags'])
+
+    def test_whobj_complex_sentence(self):
+        text = 'I have a friend whom everyone in town admires for her kindness. She is truly special.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn('WHOBJ', tagged_words[4]['tags'])
 
     def test_pire(self):
         text = 'pencil ! I am a semi-professional singer , one of whose idols is the great Judy Garland . No one'
@@ -91,7 +123,14 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
     def test_tobj(self):
         text = 'the dog that I saw'
         tagged_words = tag_text(text, pipeline=self.pipeline)
-        # That should be tagged as a TOJB
+        # That should be tagged as a TOBJ
+        self.assertIn('TOBJ', tagged_words[2]['tags'])
+
+    def test_tobj_with_proper_noun(self):
+        text = 'The painting that Picasso painted is priceless.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+
+        # That should be tagged as TOBJ
         self.assertIn('TOBJ', tagged_words[2]['tags'])
 
     def test_caus(self):

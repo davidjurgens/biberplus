@@ -43,6 +43,17 @@ class TestPronounProverbFunctions(unittest.TestCase):
         # This should be tagged as a DEMP
         self.assertIn('DEMP', tagged_words[10]['tags'])
 
+        text = 'Vernon on the morning of the regular tallyho run . This was an honor , ' \
+               'like dining with a captain'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # "This" should be tagged as a DEMP
+        self.assertIn('DEMP', tagged_words[10]['tags'])
+
+        text = 'Those are the moments I cherish the most. And these inspire me to strive harder.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # "Those" should be tagged as a DEMP
+        self.assertIn('DEMP', tagged_words[0]['tags'])
+
     def test_inpr(self):
         text = "I turned away from her coldly . `` It was nobody 's fault . She overplayed her hand '' ."
         tagged_words = tag_text(text, pipeline=self.pipeline)
@@ -50,7 +61,10 @@ class TestPronounProverbFunctions(unittest.TestCase):
         self.assertIn('INPR', tagged_words[11]['tags'])
 
     def test_prod(self):
-        pass
+        text = "Whom do they seek?"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # The "do" shouldn't be tagged as a PROD because it's preceded by a WH pronoun
+        self.assertNotIn('PROD', tagged_words[1]['tags'])
 
 
 if __name__ == '__main__':
