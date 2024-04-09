@@ -5,10 +5,10 @@ from tqdm import tqdm
 
 sys.path.append('../..')
 
-from bibermda.tagger.function_words_tagger import FunctionWordsTagger
-from bibermda.tagger.data_io import simple_split_batching
-from bibermda.tagger.tagger_utils import build_variable_dictionaries, load_config, load_pipeline
-from bibermda.tagger.biber_plus_tagger import BiberPlusTagger
+from biberplus.tagger.function_words_tagger import FunctionWordsTagger
+from biberplus.tagger.data_io import simple_split_batching
+from biberplus.tagger.tagger_utils import build_variable_dictionaries, load_config, load_pipeline
+from biberplus.tagger.biber_plus_tagger import BiberPlusTagger
 
 
 def tag_text(text, pipeline=None, config=None):

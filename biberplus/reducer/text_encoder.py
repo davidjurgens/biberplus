@@ -1,5 +1,5 @@
-from bibermda.tagger import calculate_tag_frequencies
-from bibermda.tagger.constants import BIBER_PLUS_TAGS, DOC_TAGS
+from biberplus.tagger import calculate_tag_frequencies
+from biberplus.tagger.constants import BIBER_PLUS_TAGS, DOC_TAGS
 
 
 def encode_text(config, text, round_to=10):

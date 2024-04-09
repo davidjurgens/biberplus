@@ -6,9 +6,9 @@ from math import ceil
 import numpy as np
 import pandas as pd
 
-from bibermda.tagger import tag_text
-from bibermda.tagger.constants import BIBER_PLUS_TAGS
-from bibermda.tagger.tagger_utils import load_config, load_pipeline, build_variable_dictionaries
+from biberplus.tagger import tag_text
+from biberplus.tagger.constants import BIBER_PLUS_TAGS
+from biberplus.tagger.tagger_utils import load_config, load_pipeline, build_variable_dictionaries
 
 
 def calculate_tag_frequencies(text, pipeline=None, config=None):

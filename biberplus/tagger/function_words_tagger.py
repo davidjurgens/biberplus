@@ -1,6 +1,6 @@
 from collections import Counter
 
-from bibermda.tagger.tagger_utils import build_variable_dictionaries
+from biberplus.tagger.tagger_utils import build_variable_dictionaries
 
 
 class FunctionWordsTagger:

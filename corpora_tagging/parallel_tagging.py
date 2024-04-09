@@ -3,8 +3,8 @@ import jsonlines
 
 from glob import glob
 from multiprocessing import Pool
-from bibermda.reducer import encode_text
-from bibermda.tagger.tagger_utils import load_tokenizer
+from biberplus.reducer import encode_text
+from biberplus.tagger.tagger_utils import load_tokenizer
 
 
 def tag_partitions(config, input_directory, output_directory, num_workers, default_niceness=20):

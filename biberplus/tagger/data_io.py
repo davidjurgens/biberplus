@@ -4,7 +4,7 @@ from math import ceil
 import numpy as np
 from tqdm import tqdm
 
-from bibermda.tagger.tagger_utils import load_tokenizer
+from biberplus.tagger.tagger_utils import load_tokenizer
 
 
 def simple_split_batching(text: str, token_batch_size: int, show_progress: bool):

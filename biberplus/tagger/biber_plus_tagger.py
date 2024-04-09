@@ -3,8 +3,8 @@ import re
 
 import numpy as np
 
-from bibermda.tagger.biber_run_order import RUN_ORDER
-from bibermda.tagger.tag_helper import TagHelper
+from biberplus.tagger.biber_run_order import RUN_ORDER
+from biberplus.tagger.tag_helper import TagHelper
 
 
 class BiberPlusTagger:
