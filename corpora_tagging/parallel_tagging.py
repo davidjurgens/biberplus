@@ -7,7 +7,15 @@ from biberplus.reducer import encode_text
 from biberplus.tagger.tagger_utils import load_tokenizer
 
 
-def tag_partitions(config, input_directory, output_directory, num_workers, default_niceness=20):
+def dict_add(dictionary: dict, outer_key, inner_key):
+    if outer_key not in dictionary:
+        dictionary[outer_key] = {}
+    if inner_key not in dictionary[outer_key]:
+        dictionary[outer_key][inner_key] = 0
+    dictionary[outer_key][inner_key] += 1
+
+
+def tag_partitions(config, input_directory, output_directory, num_workers, post_counts, default_niceness=20):
     process_args = build_process_args(config, input_directory, output_directory)
 
     def set_niceness():
@@ -17,22 +25,23 @@ def tag_partitions(config, input_directory, output_directory, num_workers, defau
         pool.starmap(tag_partition, process_args)
 
 
-def tag_partition(config, input_file, output_file):
+def tag_partition(config, input_file, output_file, post_counts):
     print(f"Tagging file {input_file}\n")
     tokenizer = load_tokenizer(use_gpu=False)
     tagged_objects = []
-    post_counts = {}  # Dictionary to hold counts of posts per author per subreddit
 
     with jsonlines.open(input_file) as reader:
         for obj in reader:
             tagged_object = tag_object(obj, config, tokenizer)
             tagged_objects.append(tagged_object)
 
-            author_subreddit = (obj['author'], obj['subreddit'])
-            if author_subreddit in post_counts:
-                post_counts[author_subreddit] += 1
-            else:
-                post_counts[author_subreddit] = 1
+
+            dict_add(post_counts, obj["author"], obj["subreddit"])
+            # author_subreddit = (obj['author'], obj['subreddit'])
+            # if author_subreddit in post_counts:
+            #     post_counts[author_subreddit] += 1
+            # else:
+            #     post_counts[author_subreddit] = 1
 
             if len(tagged_objects) % 5000 == 0:
                 append_chunk(output_file, tagged_objects)
@@ -41,9 +50,6 @@ def tag_partition(config, input_file, output_file):
     if tagged_objects:
         append_chunk(output_file, tagged_objects)
 
-    # Write the post counts to a TSV file
-    counts_file_name = output_file.replace('-tagged.jsonl', '-counts.tsv')
-    write_counts_to_tsv(post_counts, counts_file_name)
 
 def write_counts_to_tsv(post_counts, counts_file_name):
     with open(counts_file_name, 'w') as f:
