@@ -31,16 +31,6 @@ def partition_file(input_file, output_directory, chunks=100):
                 curr_lines = []
                 chunk += 1
 
-    # with jsonlines.open(input_file) as reader:
-    #     for obj in reader:
-    #         curr_lines.append(obj)
-    #         count += 1
-    #         if count >= chunk_size:
-    #             save_partition(curr_lines, output_directory, chunk)
-    #             count = 0
-    #             curr_lines = []
-    #             chunk += 1
-
     # Save the remaining lines, if any.
     if curr_lines:
         save_partition(curr_lines, output_directory, chunk + 1)
@@ -60,7 +50,7 @@ def save_partition(json_lines, output_directory, index):
 
 def count_lines(input_file):
     """Count the number of lines in the file."""
-    with open(input_file, 'rb') as f:
+    with gzip.open(input_file, 'rb') as f:
         return sum(1 for _ in f)
 
 
