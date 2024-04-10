@@ -1,4 +1,3 @@
-import jsonlines
 import shutil
 import logging
 import os
@@ -54,16 +53,20 @@ def count_lines(input_file):
         return sum(1 for _ in f)
 
 
+
 def join_tagged_files(input_directory, output_file):
-    """Join all tagged files from the input directory into one output file."""
-    tagged_files = glob(os.path.join(input_directory, "*-tagged.jsonl"))
+    """Join all tagged .gzip files from the input directory into one output .gzip file."""
+    # Adjust the pattern to match .gzip files
+    tagged_files = glob(os.path.join(input_directory, "*.gz"))
 
-    with jsonlines.open(output_file, mode='w') as writer:
+    # Open the output file with gzip in write mode
+    with gzip.open(output_file, mode='wt', encoding='utf-8') as writer:
         for tagged_file in tqdm(tagged_files, desc="Merging tagged files"):
-            with jsonlines.open(tagged_file) as reader:
-                for obj in reader:
-                    writer.write(obj)
-
+            # Open each tagged file with gzip in read mode
+            with gzip.open(tagged_file, mode='rt', encoding='utf-8') as reader:
+                for line in reader:
+                    # Each line is a JSON string, so we can write it directly
+                    writer.write(line)
 
 def delete_partitioned_files(dir_path):
     """Delete all partitioned files in the directory."""

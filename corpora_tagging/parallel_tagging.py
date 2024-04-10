@@ -1,5 +1,4 @@
 import os
-import jsonlines
 
 from glob import glob
 from multiprocessing import Pool
@@ -7,7 +6,7 @@ from biberplus.reducer import encode_text
 from biberplus.tagger.tagger_utils import load_tokenizer
 import gzip
 import json
-import tqdm
+from tqdm import tqdm
 
 def dict_add(dictionary: dict, outer_key, inner_key, count = 1):
     if outer_key not in dictionary:
@@ -15,6 +14,7 @@ def dict_add(dictionary: dict, outer_key, inner_key, count = 1):
     if inner_key not in dictionary[outer_key]:
         dictionary[outer_key][inner_key] = 0
     dictionary[outer_key][inner_key] += count
+
 
 
 def tag_partitions(config, input_directory, output_directory, num_workers, post_counts, default_niceness=20):
@@ -31,8 +31,6 @@ def tag_partitions(config, input_directory, output_directory, num_workers, post_
               for subreddit, count in subreddit_dict.items():
                 dict_add(post_counts, author, subreddit, count)
 
-
-
 def tag_partition(config, input_file, output_file):
     post_counts = {}
     print(f"Tagging file {input_file}\n")
@@ -46,23 +44,25 @@ def tag_partition(config, input_file, output_file):
         # Split the data into individual samples based on newline delimiter
         samples = decompressed_data.split('\n')
         
-        # Iterate over individual samples
-        for obj_str in samples:
+        # Iterate over individual samples with a progress bar
+        for obj_str in tqdm(samples, desc=f"Processing {os.path.basename(input_file)}", unit="sample"):
+            if not obj_str.strip():  # Skip empty lines
+                continue
             obj = json.loads(obj_str)
-            # print(f"obj type: {type(obj)}, obj: {obj}")
             dict_add(post_counts, obj["author"], obj["subreddit"])
             tagged_object = tag_object(obj, config, tokenizer)
             tagged_objects.append(tagged_object)
-
 
             if len(tagged_objects) % 5000 == 0:
                 append_chunk(output_file, tagged_objects)
                 tagged_objects = []
 
+    # Handling the last batch if it didn't reach the batch size threshold
     if tagged_objects:
         append_chunk(output_file, tagged_objects)
     
     return post_counts
+
 
 def write_counts_to_tsv(post_counts, counts_file_name):
     with open(counts_file_name, 'w') as f:
@@ -72,7 +72,7 @@ def write_counts_to_tsv(post_counts, counts_file_name):
 
 
 def build_process_args(config, input_directory, output_directory):
-    partition_files = glob(f"{input_directory}*.gz")
+    partition_files = glob(os.path.join(input_directory, '*.gz'))
     process_args = []
 
     for fp in partition_files:
@@ -96,5 +96,7 @@ def tag_object(obj, config, tokenizer):
 
 
 def append_chunk(output_file, tagged_objects):
-    with jsonlines.open(output_file, mode='a') as writer:
-        writer.write_all(tagged_objects)
+    # Opening the file in append mode
+    with gzip.open(output_file, mode='ab') as writer:
+        for obj in tagged_objects:
+            writer.write((json.dumps(obj) + "\n").encode('utf-8'))  # Writing each object as a new line
