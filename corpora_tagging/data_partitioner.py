@@ -5,6 +5,7 @@ import os
 
 from glob import glob
 from tqdm import tqdm
+import gzip
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,8 +21,8 @@ def partition_file(input_file, output_directory, chunks=100):
     curr_lines = []
     count, chunk = 0, 1
 
-    with jsonlines.open(input_file) as reader:
-        for obj in reader:
+    with gzip.open(input_file) as f:
+        for obj in f:
             curr_lines.append(obj)
             count += 1
             if count >= chunk_size:
@@ -30,6 +31,16 @@ def partition_file(input_file, output_directory, chunks=100):
                 curr_lines = []
                 chunk += 1
 
+    # with jsonlines.open(input_file) as reader:
+    #     for obj in reader:
+    #         curr_lines.append(obj)
+    #         count += 1
+    #         if count >= chunk_size:
+    #             save_partition(curr_lines, output_directory, chunk)
+    #             count = 0
+    #             curr_lines = []
+    #             chunk += 1
+
     # Save the remaining lines, if any.
     if curr_lines:
         save_partition(curr_lines, output_directory, chunk + 1)
@@ -37,11 +48,14 @@ def partition_file(input_file, output_directory, chunks=100):
 
 def save_partition(json_lines, output_directory, index):
     """Save the current partition of lines to a file."""
-    out = os.path.join(output_directory, f"partition-{index}.jsonl")
-    logging.info(f"Saving {out}")
+    os.makedirs(output_directory, exist_ok=True)
+    
+    out_file = os.path.join(output_directory, f"partition-{index}.jsonl.gz")
+    logging.info(f"Saving {out_file}")
 
-    with jsonlines.open(out, mode='w') as writer:
-        writer.write_all(json_lines)
+    with gzip.open(out_file, mode='wb') as f:
+        for line in json_lines:
+            f.write(line)
 
 
 def count_lines(input_file):

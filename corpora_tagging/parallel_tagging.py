@@ -5,6 +5,7 @@ from glob import glob
 from multiprocessing import Pool
 from biberplus.reducer import encode_text
 from biberplus.tagger.tagger_utils import load_tokenizer
+import gzip
 
 
 def dict_add(dictionary: dict, outer_key, inner_key):
@@ -30,8 +31,15 @@ def tag_partition(config, input_file, output_file, post_counts):
     tokenizer = load_tokenizer(use_gpu=False)
     tagged_objects = []
 
-    with jsonlines.open(input_file) as reader:
-        for obj in reader:
+    with gzip.open(input_file, 'rb') as f:
+        # Decompress and decode the file
+        decompressed_data = f.read().decode('utf-8')
+        
+        # Split the data into individual samples based on newline delimiter
+        samples = decompressed_data.split('\n')
+        
+        # Iterate over individual samples
+        for obj in samples:
             tagged_object = tag_object(obj, config, tokenizer)
             tagged_objects.append(tagged_object)
 
@@ -46,6 +54,23 @@ def tag_partition(config, input_file, output_file, post_counts):
             if len(tagged_objects) % 5000 == 0:
                 append_chunk(output_file, tagged_objects)
                 tagged_objects = []
+
+    # with jsonlines.open(input_file) as reader:
+    #     for obj in reader:
+    #         tagged_object = tag_object(obj, config, tokenizer)
+    #         tagged_objects.append(tagged_object)
+
+
+    #         dict_add(post_counts, obj["author"], obj["subreddit"])
+    #         # author_subreddit = (obj['author'], obj['subreddit'])
+    #         # if author_subreddit in post_counts:
+    #         #     post_counts[author_subreddit] += 1
+    #         # else:
+    #         #     post_counts[author_subreddit] = 1
+
+    #         if len(tagged_objects) % 5000 == 0:
+    #             append_chunk(output_file, tagged_objects)
+    #             tagged_objects = []
 
     if tagged_objects:
         append_chunk(output_file, tagged_objects)
