@@ -76,8 +76,8 @@ def build_process_args(config, input_directory, output_directory):
     process_args = []
 
     for fp in partition_files:
-        fname = fp.rsplit('.', 1)[-1].replace('.gz', '') + '-tagged.gz'
-        out = f"{output_directory}{fname}"
+        fname = fp.rsplit('/')[-1].replace('.gz', '') + '-tagged.gz'
+        out = os.path.join(output_directory, fname)
         process_args.append((config, fp, out))
 
     return process_args
