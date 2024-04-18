@@ -26,7 +26,7 @@ def tag_partitions(config, input_directory, output_directory, num_workers, post_
     with Pool(num_workers, initializer=set_niceness) as pool:
         results = pool.starmap(tag_partition, process_args)
 
-    for local_count in tqdm(results, desc='Aggregating post counts', unit='file'):
+    for local_count in results:
           for author, subreddit_dict in local_count.items():
               for subreddit, count in subreddit_dict.items():
                 dict_add(post_counts, author, subreddit, count)
@@ -45,7 +45,7 @@ def tag_partition(config, input_file, output_file):
         samples = decompressed_data.split('\n')
         
         # Iterate over individual samples with a progress bar
-        for obj_str in tqdm(samples, desc=f"Processing {os.path.basename(input_file)}", unit="sample"):
+        for obj_str in samples:
             if not obj_str.strip():  # Skip empty lines
                 continue
             obj = json.loads(obj_str)
@@ -53,7 +53,7 @@ def tag_partition(config, input_file, output_file):
             tagged_object = tag_object(obj, config, tokenizer)
             tagged_objects.append(tagged_object)
 
-            if len(tagged_objects) % 5000 == 0:
+            if len(tagged_objects) % 1000 == 0:
                 append_chunk(output_file, tagged_objects)
                 tagged_objects = []
 
@@ -64,11 +64,12 @@ def tag_partition(config, input_file, output_file):
     return post_counts
 
 
-def write_counts_to_tsv(post_counts, counts_file_name):
+def write_to_tsv(post_counts, counts_file_name):
     with open(counts_file_name, 'w') as f:
         f.write("author\tsubreddit\tpost_count\n")  # Header
-        for (author, subreddit), count in post_counts.items():
-            f.write(f"{author}\t{subreddit}\t{count}\n")
+        for author, subreddit_dict in post_counts.items():
+            for subreddit, count in subreddit_dict.items():
+                f.write(f"{author}\t{subreddit}\t{count}\n")
 
 
 def build_process_args(config, input_directory, output_directory):
