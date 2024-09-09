@@ -8,4 +8,4 @@ show_progress: False
 n_processes: 1
 processing_size: 10000
 return_text: False
-drop_last_batch_pct: 0.5
+drop_last_batch_pct: 0.0

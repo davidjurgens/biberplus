@@ -107,3 +107,10 @@ def load_tags(config):
         tags.extend(fw)
 
     return tags
+
+
+def get_tagged_words(text, pipeline=None, config=None):
+    config = config or load_config()
+    pipeline = pipeline or load_pipeline(config)
+    tagged_words = tag_text(text, pipeline, config)
+    return tagged_words
