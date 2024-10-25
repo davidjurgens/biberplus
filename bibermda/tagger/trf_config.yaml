@@ -1,0 +1,12 @@
+biber: True
+function_words: True
+binary_tags: False
+function_words_list: [ ]
+token_normalization: 1000
+use_gpu: False
+show_progress: False
+n_processes: 1
+processing_size: 10000
+return_text: False
+drop_last_batch_pct: 0.0
+model_name: en_core_web_trf

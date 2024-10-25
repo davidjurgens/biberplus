@@ -37,8 +37,9 @@ def read_in_variables(txt_file):
 def load_pipeline(config):
     if config['use_gpu']:
         spacy.require_gpu()
+    model_name = config.get('model_name', "en_core_web_sm")
 
-    return spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner', 'textcat'])
+    return spacy.load(model_name, disable=['parser', 'lemmatizer', 'ner', 'textcat'])
 
 
 def load_tokenizer(use_gpu=False):
