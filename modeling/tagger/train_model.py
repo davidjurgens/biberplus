@@ -1,24 +1,20 @@
 import os
+import sys
 import pandas as pd
 import numpy as np
-from datasets import Dataset
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
-from sklearn.metrics import f1_score, roc_auc_score, precision_score, recall_score
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, EarlyStoppingCallback
+
 import wandb
-from typing import Dict, List
 import logging
 
-# ============================================================================
-# Configuration and Setup
-# ============================================================================
+sys.path.append('../..')
 
-# GPU Settings
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+from modeling.tagger.train_utils import StreamingDataset, compute_metrics, compute_tag_level_metrics
 
 # Path Configuration
 BASE_DIR = "/shared/3/projects/hiatus/tagged_data/models"
 MODEL_NAME = "roberta-base"
-RUN_NAME = "finetune"
+RUN_NAME = "binary-finetune"
 NUM_EPOCHS = 5
 
 RUN_DIR = os.path.join(BASE_DIR, MODEL_NAME, RUN_NAME)
@@ -28,9 +24,13 @@ MODEL_SAVE_PATH = os.path.join(RUN_DIR, "best_model")
 TAG_PERFORMANCE_SUMMARY_PATH = os.path.join(RUN_DIR, "tag_level_performance_summary.csv")
 
 # Create necessary directories
-os.makedirs(RUN_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-os.makedirs(MODEL_SAVE_PATH, exist_ok=True)
+try:
+    os.makedirs(RUN_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(MODEL_SAVE_PATH, exist_ok=True)
+except Exception as e:
+    print(f"Failed to create directories: {e}")
+    raise
 
 # Add logging configuration
 logging.basicConfig(
@@ -40,7 +40,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Add config logging
 logger.info(f"Starting training run with configuration:")
 logger.info(f"Model: {MODEL_NAME}")
 logger.info(f"Run name: {RUN_NAME}")
@@ -51,74 +50,24 @@ logger.info(f"Number of epochs: {NUM_EPOCHS}")
 # Data Loading and Preprocessing
 # ============================================================================
 
-logger.info("Loading datasets...")
-train_df = pd.read_csv('/shared/3/projects/hiatus/tagged_data/binary_train.tsv', sep='\t')
-dev_df = pd.read_csv('/shared/3/projects/hiatus/tagged_data/binary_dev.tsv',  sep='\t')
-test_df = pd.read_csv('/shared/3/projects/hiatus/tagged_data/binary_test.tsv',  sep='\t')
-
-text_column = 'text'
-label_columns = train_df.columns[1:].tolist()
-
-logger.info(f"Dataset sizes - Train: {len(train_df)}, Dev: {len(dev_df)}, Test: {len(test_df)}")
-logger.info(f"Number of labels: {len(label_columns)}")
-logger.info(f"Labels: {', '.join(label_columns)}")
-
-# Convert to HuggingFace datasets
-train_dataset = Dataset.from_pandas(train_df)
-dev_dataset = Dataset.from_pandas(dev_df)
-test_dataset = Dataset.from_pandas(test_df)
-
-# ============================================================================
-# Model and Tokenizer Setup
-# ============================================================================
-
 logger.info(f"Loading tokenizer and model from {MODEL_NAME}...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+
+logger.info("Initializing streaming datasets...")
+train_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_train.tsv', tokenizer)
+dev_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_dev.tsv', tokenizer)
+test_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_test.tsv', tokenizer)
+
+logger.info(f"Loading tokenizer and model from {MODEL_NAME}...")
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL_NAME,
     problem_type="multi_label_classification",
-    num_labels=len(label_columns)
+    num_labels=len(train_dataset.label_columns)
 ).to('cuda')
 
-def tokenize_function(examples):
-    return tokenizer(examples[text_column], padding="max_length", truncation=True, max_length=512)
-
-logger.info("Tokenizing datasets...")
-tokenized_train = train_dataset.map(tokenize_function, batched=True)
-tokenized_dev = dev_dataset.map(tokenize_function, batched=True)
-tokenized_test = test_dataset.map(tokenize_function, batched=True)
-logger.info("Tokenization complete")
-
-# ============================================================================
-# Metrics and Evaluation Functions
-# ============================================================================
-
-def compute_metrics(eval_pred):
-    predictions, labels = eval_pred
-    predictions = np.array(predictions >= 0.5, dtype=float)
-    
-    f1_micro = f1_score(labels, predictions, average='micro')
-    f1_macro = f1_score(labels, predictions, average='macro')
-    roc_auc = roc_auc_score(labels, predictions, average='macro', multi_class='ovr')
-    
-    return {
-        'f1_micro': f1_micro,
-        'f1_macro': f1_macro,
-        'roc_auc': roc_auc
-    }
-
-def compute_tag_level_metrics(predictions: np.ndarray, labels: np.ndarray, tag_names: List[str]) -> Dict[str, Dict[str, float]]:
-    tag_metrics = {}
-    for i, tag in enumerate(tag_names):
-        tag_predictions = predictions[:, i]
-        tag_labels = labels[:, i]
-        tag_metrics[tag] = {
-            'precision': precision_score(tag_labels, tag_predictions),
-            'recall': recall_score(tag_labels, tag_predictions),
-            'f1': f1_score(tag_labels, tag_predictions),
-            'auc': roc_auc_score(tag_labels, tag_predictions)
-        }
-    return tag_metrics
+logger.info(f"Dataset sizes - Train: {train_dataset.total_rows}, Dev: {dev_dataset.total_rows}, Test: {test_dataset.total_rows}")
+logger.info(f"Number of labels: {len(train_dataset.label_columns)}")
+logger.info(f"Labels: {', '.join(train_dataset.label_columns)}")
 
 # ============================================================================
 # Training Setup and Execution
@@ -134,15 +83,14 @@ wandb.init(
         "learning_rate": 2e-5,
         "batch_size": 16,
         "weight_decay": 0.01,
-        "num_labels": len(label_columns),
-        "labels": label_columns,
-        "train_size": len(train_df),
-        "dev_size": len(dev_df),
-        "test_size": len(test_df)
+        "num_labels": len(train_dataset.label_columns),
+        "labels": train_dataset.label_columns,
+        "train_size": train_dataset.total_rows,
+        "dev_size": dev_dataset.total_rows,
+        "test_size": test_dataset.total_rows
     }
 )
 
-# Training arguments
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
     evaluation_strategy="epoch",
@@ -154,28 +102,30 @@ training_args = TrainingArguments(
     push_to_hub=False,
     load_best_model_at_end=True,
     report_to="wandb",
+    gradient_accumulation_steps=4,
+    metric_for_best_model="eval_f1_macro",
+    greater_is_better=True,
+    fp16=True,
 )
 
-# Initialize trainer
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_train,
-    eval_dataset=tokenized_dev,
+    train_dataset=train_dataset,
+    eval_dataset=dev_dataset,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics,
     callbacks=[
-        transformers.EarlyStoppingCallback(early_stopping_patience=3)
+        EarlyStoppingCallback(early_stopping_patience=3)
     ]
 )
 
-# Training progress will be logged automatically by the Trainer
 train_result = trainer.train()
 logger.info(f"Training completed. Metrics: {train_result.metrics}")
 wandb.log({"training_loss": train_result.metrics["train_loss"]})
 
 logger.info("Evaluating on test set...")
-test_results = trainer.evaluate(tokenized_test)
+test_results = trainer.evaluate(test_dataset)
 logger.info(f"Test results: {test_results}")
 wandb.log({
     "test_loss": test_results["eval_loss"],
@@ -192,9 +142,9 @@ trainer.save_model(MODEL_SAVE_PATH)
 # ============================================================================
 
 logger.info("Computing tag-level metrics...")
-test_predictions = trainer.predict(tokenized_test)
+test_predictions = trainer.predict(test_dataset)
 test_predictions_binary = np.array(test_predictions.predictions >= 0.5, dtype=float)
-tag_level_metrics = compute_tag_level_metrics(test_predictions_binary, test_predictions.label_ids, label_columns)
+tag_level_metrics = compute_tag_level_metrics(test_predictions_binary, test_predictions.label_ids, train_dataset.label_columns)
 
 # Log detailed results
 logger.info("\nTag-level performance on test set:")
