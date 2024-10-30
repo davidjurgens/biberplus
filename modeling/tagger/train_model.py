@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import pandas as pd
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, EarlyStoppingCallback
@@ -46,6 +47,9 @@ logger.info(f"Run name: {RUN_NAME}")
 logger.info(f"Output directory: {OUTPUT_DIR}")
 logger.info(f"Number of epochs: {NUM_EPOCHS}")
 
+# Add batch size constant near other configurations
+BATCH_SIZE = 192
+
 # ============================================================================
 # Data Loading and Preprocessing
 # ============================================================================
@@ -54,9 +58,9 @@ logger.info(f"Loading tokenizer and model from {MODEL_NAME}...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 logger.info("Initializing streaming datasets...")
-train_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_train.tsv', tokenizer)
-dev_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_dev.tsv', tokenizer)
-test_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_test.tsv', tokenizer)
+train_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_train.tsv', tokenizer, batch_size=BATCH_SIZE)
+dev_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_dev.tsv', tokenizer, batch_size=BATCH_SIZE)
+test_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/binary_test.tsv', tokenizer, batch_size=BATCH_SIZE)
 
 logger.info(f"Loading tokenizer and model from {MODEL_NAME}...")
 model = AutoModelForSequenceClassification.from_pretrained(
@@ -81,7 +85,7 @@ wandb.init(
         "model_name": MODEL_NAME,
         "num_epochs": NUM_EPOCHS,
         "learning_rate": 2e-5,
-        "batch_size": 16,
+        "batch_size": BATCH_SIZE,
         "weight_decay": 0.01,
         "num_labels": len(train_dataset.label_columns),
         "labels": train_dataset.label_columns,
@@ -91,18 +95,25 @@ wandb.init(
     }
 )
 
+# Save 4 times per epoch
+steps_per_epoch = math.ceil(train_dataset.total_rows / BATCH_SIZE)
+eval_save_steps = steps_per_epoch // 4 
+logger.info(f"Evaluating and saving every {eval_save_steps} steps")
+
+
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
-    evaluation_strategy="epoch",
+    evaluation_strategy="steps",
+    eval_steps=eval_save_steps,
+    save_strategy="steps", 
+    save_steps=eval_save_steps,
     learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
-    num_train_epochs=NUM_EPOCHS,
+    per_device_train_batch_size=BATCH_SIZE,
+    per_device_eval_batch_size=BATCH_SIZE,
     weight_decay=0.01,
     push_to_hub=False,
     load_best_model_at_end=True,
     report_to="wandb",
-    gradient_accumulation_steps=4,
     metric_for_best_model="eval_f1_macro",
     greater_is_better=True,
     fp16=True,

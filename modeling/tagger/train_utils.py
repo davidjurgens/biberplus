@@ -12,7 +12,7 @@ def chunk_df_iterator(file_path, chunk_size=1000):
         raise RuntimeError(f"Error reading file {file_path}: {str(e)}")
 
 class StreamingDataset(IterableDataset):
-    def __init__(self, file_path, tokenizer, chunk_size=1000):
+    def __init__(self, file_path, tokenizer, chunk_size=1000, batch_size=16):
         self.file_path = file_path
         self.tokenizer = tokenizer
         self.chunk_size = chunk_size
@@ -32,6 +32,14 @@ class StreamingDataset(IterableDataset):
                     self.total_rows = sum(1 for _ in pd.read_csv(file_path, sep='\t', usecols=[0]))
         except Exception as e:
             raise RuntimeError(f"Failed to initialize dataset from {file_path}: {str(e)}")
+        
+        self.batch_size = batch_size
+        
+    def get_total_steps(self):
+        return self.total_rows // self.batch_size
+        
+    def __len__(self):
+        return self.get_total_steps()
         
     def __iter__(self):
         for chunk in chunk_df_iterator(self.file_path, self.chunk_size):
