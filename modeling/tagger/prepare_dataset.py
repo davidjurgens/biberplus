@@ -1,10 +1,7 @@
 import os
-import csv
 import json
-import numpy as np
 import pandas as pd
 
-from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 def get_dataset_paths():
@@ -119,16 +116,19 @@ def get_biber_features():
     ]
 
 def create_dataset(output_file, dataset_paths, biber_features):
-    columns = ['text'] + biber_features
-    
-    with open(output_file, 'w', newline='') as tsvfile:
-        writer = csv.writer(tsvfile, delimiter='\t')
-        writer.writerow(columns)  
-
+    with open(output_file, 'w') as jsonl_file:
         for name, corpus_path in dataset_paths.items():
             corpus_fp = os.path.join(corpus_path, 'corpus.jsonl')
+            line_count = 0
+            valid_count = 0
+            
+            print(f"\nProcessing {corpus_fp}")
             with open(corpus_fp, 'r') as file:
-                for line in tqdm(file, desc=f"Processing {corpus_fp}"):
+                for line in file:
+                    line_count += 1
+                    if line_count % 1000000 == 0:
+                        print(f"Processed {line_count:,} lines...")
+                    
                     data = json.loads(line)
                     text = data.get('fullText', '')
                     binary_encodings = data.get('biber_tagged', {}).get('binary', [])
@@ -136,43 +136,75 @@ def create_dataset(output_file, dataset_paths, biber_features):
                     if not text or not binary_encodings:
                         continue
 
-                    writer.writerow([text] + binary_encodings)
+                    valid_count += 1
+                    output_obj = {
+                        'text': text,
+                        'features': dict(zip(biber_features, binary_encodings))
+                    }
+                    jsonl_file.write(json.dumps(output_obj) + '\n')
+            
+            print(f"\nDataset: {name}")
+            print(f"Total lines: {line_count:,}")
+            print(f"Valid lines: {valid_count:,}")
+            print(f"Filtered lines: {line_count - valid_count:,}\n")
 
-def read_and_shuffle(file_path, chunk_size=100000):
+def read_and_shuffle(file_path, chunksize=50000):
     chunks = []
-    for chunk in pd.read_csv(file_path, sep='\t', chunksize=chunk_size):
+    for chunk in pd.read_json(file_path, lines=True, chunksize=chunksize):
         chunks.append(chunk.sample(frac=1))
-    return pd.concat(chunks).sample(frac=1).reset_index(drop=True)
-
-def save_to_tsv(df, file_path, chunk_size=100000):
+    return pd.concat(chunks).reset_index(drop=True)
+  
+  
+def save_to_jsonl(df, file_path):
     if not os.path.exists(os.path.dirname(file_path)):
         os.makedirs(os.path.dirname(file_path))
-    for i, chunk in enumerate(np.array_split(df, len(df) // chunk_size + 1)):
-        mode = 'w' if i == 0 else 'a'
-        header = i == 0
-        chunk.to_csv(file_path, sep='\t', mode=mode, header=header, index=False)
+    
+    df.to_json(file_path, orient='records', lines=True)
 
-def split_and_save_data(input_file):
-    print("Reading and shuffling data...")
-    df = read_and_shuffle(input_file)
-
-    print("Splitting data...")
-    train, temp = train_test_split(df, test_size=0.2, random_state=42)
-    dev, test = train_test_split(temp, test_size=0.5, random_state=42)
-
-    print("Saving train set...")
-    save_to_tsv(train, '/shared/3/projects/hiatus/tagged_data/binary_train.tsv')
-    print("Saving dev set...")
-    save_to_tsv(dev, '/shared/3/projects/hiatus/tagged_data/binary_dev.tsv')
-    print("Saving test set...")
-    save_to_tsv(test, '/shared/3/projects/hiatus/tagged_data/binarytest.tsv')
+def split_and_save_data(input_file, chunk_size=50000):
+    print(f"Processing data in chunks of {chunk_size:,}...")
+    
+    # Initialize file writers
+    train_file = '/shared/3/projects/hiatus/tagged_data/binary_train.jsonl'
+    dev_file = '/shared/3/projects/hiatus/tagged_data/binary_dev.jsonl'
+    test_file = '/shared/3/projects/hiatus/tagged_data/binary_test.jsonl'
+    
+    # Create directories if they don't exist
+    for file_path in [train_file, dev_file, test_file]:
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
+    # Process in chunks
+    with open(train_file, 'w') as train_f, \
+         open(dev_file, 'w') as dev_f, \
+         open(test_file, 'w') as test_f:
+        
+        for chunk in pd.read_json(input_file, lines=True, chunksize=chunk_size):
+            # Shuffle the chunk
+            chunk = chunk.sample(frac=1, random_state=42)
+            
+            # Calculate split indices for 80/10/10
+            n = len(chunk)
+            train_idx = int(n * 0.8)
+            dev_idx = int(n * 0.9)
+            
+            # Split the chunk
+            train_chunk = chunk.iloc[:train_idx]
+            dev_chunk = chunk.iloc[train_idx:dev_idx]
+            test_chunk = chunk.iloc[dev_idx:]
+            
+            # Write to respective files
+            train_chunk.to_json(train_f, orient='records', lines=True)
+            dev_chunk.to_json(dev_f, orient='records', lines=True)
+            test_chunk.to_json(test_f, orient='records', lines=True)
+    
+    print("Data splitting and saving completed.")
 
 def main():
-    output_file = '/shared/3/projects/hiatus/tagged_data/binary_multi_label_dataset.tsv'
-    dataset_paths = get_dataset_paths()
-    biber_features = get_biber_features()
+    output_file = '/shared/3/projects/hiatus/tagged_data/binary_multi_label_dataset.jsonl'
+    # dataset_paths = get_dataset_paths()
+    # biber_features = get_biber_features()
     
-    create_dataset(output_file, dataset_paths, biber_features)
+    # create_dataset(output_file, dataset_paths, biber_features)
     
     split_and_save_data(output_file)
     
