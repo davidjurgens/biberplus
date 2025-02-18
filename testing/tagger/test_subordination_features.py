@@ -2,7 +2,7 @@ import unittest
 
 import spacy
 
-from bibermda.tagger import tag_text
+from biberplus.tagger import tag_text
 
 
 class TestSubordinationFeatureFunctions(unittest.TestCase):
@@ -15,6 +15,18 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         # That should be tagged as a THVC
         self.assertIn('THVC', tagged_words[10]['tags'])
+
+    def test_thvc_case_followed_by_determiner(self):
+        text = "I've read a few of these reviews and think that Fisher Price must have a quality control issue ."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'That' should be tagged as a THVC
+        self.assertIn('THVC', tagged_words[10]['tags'])
+
+    def test_thvc_case_preceded_by_noun_and_preposition(self):
+        text = "I heard that they had a great time at the party ."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'That' should be tagged as a THVC
+        self.assertIn('THVC', tagged_words[2]['tags'])
 
     def test_thac(self):
         text = "twice a day for 20 minutes per use . Disappointing that it failed so quickly . I have now owned"
@@ -47,6 +59,15 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         # Reported should be tagged as WZPAST
         self.assertIn('WZPAST', tagged_words[10]['tags'])
 
+        text = 'The toy created by the child was innovative. However, the mechanism used in its operation was complex.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+
+        # 'created' should be tagged as WZPAST
+        self.assertIn('WZPAST', tagged_words[2]['tags'])
+
+        # Additionally, 'used' should also be tagged as WZPAST
+        self.assertIn('WZPAST', tagged_words[13]['tags'])
+
     def test_wzpres(self):
         text = "and the mean , and he sees the Compson family disintegrating from within . If the barn-burner 's " \
                "family produces"
@@ -61,6 +82,12 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         # That should be tagged as a TSUB
         self.assertIn('TSUB', tagged_words[10]['tags'])
 
+    def test_tsub_with_intervening_adverb(self):
+        text = 'The movies that often showcase historical events are thrilling. It presents a blend of facts and fiction.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # That should be tagged as TSUB
+        self.assertIn('TSUB', tagged_words[2]['tags'])
+
     def test_whsub(self):
         text = '. There are plenty of reference mentioned at the end which can be followed ' \
                'up for more curiosity . Must'
@@ -73,6 +100,11 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         # Whose should be tagged as a WHOBJ
         self.assertIn('WHOBJ', tagged_words[10]['tags'])
+
+    def test_whobj_complex_sentence(self):
+        text = 'I have a friend whom everyone in town admires for her kindness. She is truly special.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn('WHOBJ', tagged_words[4]['tags'])
 
     def test_pire(self):
         text = 'pencil ! I am a semi-professional singer , one of whose idols is the great Judy Garland . No one'
@@ -91,7 +123,14 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
     def test_tobj(self):
         text = 'the dog that I saw'
         tagged_words = tag_text(text, pipeline=self.pipeline)
-        # That should be tagged as a TOJB
+        # That should be tagged as a TOBJ
+        self.assertIn('TOBJ', tagged_words[2]['tags'])
+
+    def test_tobj_with_proper_noun(self):
+        text = 'The painting that Picasso painted is priceless.'
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+
+        # That should be tagged as TOBJ
         self.assertIn('TOBJ', tagged_words[2]['tags'])
 
     def test_caus(self):
@@ -119,6 +158,131 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         # Since should be tagged as an OSUB
         self.assertIn('OSUB', tagged_words[10]['tags'])
 
+    def test_causative_subordinators(self):
+        """Test causative subordinator 'because'"""
+        texts = [
+            "I stayed home because I was sick",
+            "The experiment failed because of poor controls",
+            "Because the weather was bad, we cancelled"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            self.assertTrue(any('CAUS' in word['tags'] 
+                              for word in tagged_words 
+                              if word['text'].lower() == 'because'))
 
+    def test_concessive_subordinators(self):
+        """Test concessive subordinators (although, though, tho)"""
+        texts = [
+            "Although it was raining, we went out",
+            "We continued though it was difficult",
+            "They succeeded, tho nobody believed in them"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            concessive_words = ['although', 'though', 'tho']
+            found = False
+            for word in tagged_words:
+                if word['text'].lower() in concessive_words:
+                    self.assertIn('CONC', word['tags'])
+                    found = True
+            self.assertTrue(found)
+
+    def test_conditional_subordinators(self):
+        """Test conditional subordinators (if, unless)"""
+        texts = [
+            "If it rains, bring an umbrella",
+            "Unless you study, you won't pass",
+            "The experiment will fail if proper controls aren't used"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            conditional_words = ['if', 'unless']
+            found = False
+            for word in tagged_words:
+                if word['text'].lower() in conditional_words:
+                    self.assertIn('COND', word['tags'])
+                    found = True
+            self.assertTrue(found)
+
+    def test_other_subordinators(self):
+        """Test other subordinators"""
+        texts = [
+            "Since you asked, I'll explain",
+            "While the experiment ran, we collected data",
+            "Whereas the first trial succeeded, the second failed"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            found = False
+            for word in tagged_words:
+                if word['text'].lower() in ['since', 'while', 'whereas']:
+                    self.assertIn('OSUB', word['tags'])
+                    found = True
+            self.assertTrue(found)
+
+    def test_complex_other_subordinators(self):
+        """Test multi-word other subordinators"""
+        text = "I'll wait as long as necessary"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        
+        # Find the "as" that starts "as long as"
+        for i, word in enumerate(tagged_words):
+            if word['text'].lower() == 'as' and i + 2 < len(tagged_words):
+                if tagged_words[i+1]['text'].lower() == 'long' and tagged_words[i+2]['text'].lower() == 'as':
+                    self.assertIn('OSUB', word['tags'])
+                    return
+        self.fail("Multi-word subordinator 'as long as' not properly tagged")
+
+    def test_multiple_subordinators(self):
+        """Test text with multiple subordinators"""
+        text = "Although it was difficult, we continued because we believed that if we persisted, we would succeed"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        
+        # Find indices dynamically instead of hardcoding
+        for i, word in enumerate(tagged_words):
+            if word['text'].lower() == 'although':
+                self.assertIn('CONC', word['tags'])
+            elif word['text'].lower() == 'because':
+                self.assertIn('CAUS', word['tags'])
+            elif word['text'].lower() == 'if':
+                self.assertIn('COND', word['tags'])
+
+    def test_complex_osub_cases(self):
+        """Test complex cases of other subordinators"""
+        texts = [
+            "Insofar as the data shows",
+            "Inasmuch as we understand",
+            "Such that the results were clear",
+            "So that we could proceed"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            # These are multi-word subordinators, need to check first word
+            first_word = tagged_words[0]['text'].lower()
+            if first_word in ['insofar', 'inasmuch', 'such', 'so']:
+                self.assertIn('OSUB', tagged_words[0]['tags'])
+
+    def test_subordinator_with_punctuation(self):
+        """Test subordinators with various punctuation patterns"""
+        texts = [
+            "We proceeded, although with caution",
+            "If, and only if, the conditions are met"
+        ]
+        expected_tags = {
+            'although': 'CONC',
+            'if': 'COND'
+        }
+        
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            found = False
+            for word in tagged_words:
+                word_lower = word['text'].lower()
+                if word_lower in expected_tags:
+                    self.assertIn(expected_tags[word_lower], word['tags'])
+                    found = True
+                    break
+            self.assertTrue(found, f"No subordinator found in text: {text}")
 if __name__ == '__main__':
     unittest.main()
