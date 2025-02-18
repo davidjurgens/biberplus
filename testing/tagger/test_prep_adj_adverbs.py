@@ -37,6 +37,35 @@ class TestPrepPhrasesAdjectiveAdverbFunctions(unittest.TestCase):
         self.assertIn('PRED', tagged_words[3]['tags'])
         self.assertIn('PRED', tagged_words[-2]['tags'])
 
+    def test_pin_multiple(self):
+        text = "The book on the shelf in the corner of the room was dusty"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        
+        # Check multiple prepositions are tagged as PIN
+        self.assertIn('PIN', tagged_words[2]['tags'])  # on
+        self.assertIn('PIN', tagged_words[5]['tags'])  # in
+        self.assertIn('PIN', tagged_words[8]['tags'])  # of
+
+    def test_pred_be_forms(self):
+        text = "The flowers are beautiful. The cat was lazy. The students have been diligent."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        
+        # Test predicative adjectives with different BE forms
+        self.assertIn('PRED', tagged_words[3]['tags'])  # beautiful
+        self.assertIn('PRED', tagged_words[8]['tags'])  # lazy
+        self.assertIn('PRED', tagged_words[14]['tags'])  # diligent
+
+
+    def test_rb_adverbs(self):
+        text = "She quickly and efficiently completed the task. He spoke very softly."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        
+        # Test different types of adverbs
+        self.assertIn('RB', tagged_words[1]['tags'])  # quickly
+        self.assertIn('RB', tagged_words[3]['tags'])  # efficiently
+        self.assertIn('RB', tagged_words[10]['tags'])  # very
+        self.assertIn('RB', tagged_words[11]['tags'])  # softly
+
 
 if __name__ == '__main__':
     unittest.main()

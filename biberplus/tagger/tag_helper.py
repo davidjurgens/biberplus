@@ -13,7 +13,8 @@ class TagHelper:
 
     @staticmethod
     def is_adverb(word):
-        return word and word['upos'] == 'ADV'
+        return word and (word['upos'] == 'ADV' or 
+                        word['xpos'] in ['RB', 'RBR', 'RBS', 'WRB'])
 
     @staticmethod
     def is_auxiliary(word):
@@ -129,7 +130,8 @@ class TagHelper:
         return word and word['text'].lower() in self.patterns['quantifier_pronouns']
 
     def is_preposition(self, word):
-        return word['text'].lower() in self.patterns['prepositional_phrases']
+        return word and (word['upos'] == 'ADP' or word['xpos'] == 'IN' or 
+                        word['text'].lower() in self.patterns['prepositional_phrases'])
 
     def is_be(self, word):
         return word and word['text'].lower() in self.patterns['be']

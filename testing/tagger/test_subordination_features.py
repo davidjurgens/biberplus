@@ -158,6 +158,131 @@ class TestSubordinationFeatureFunctions(unittest.TestCase):
         # Since should be tagged as an OSUB
         self.assertIn('OSUB', tagged_words[10]['tags'])
 
+    def test_causative_subordinators(self):
+        """Test causative subordinator 'because'"""
+        texts = [
+            "I stayed home because I was sick",
+            "The experiment failed because of poor controls",
+            "Because the weather was bad, we cancelled"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            self.assertTrue(any('CAUS' in word['tags'] 
+                              for word in tagged_words 
+                              if word['text'].lower() == 'because'))
 
+    def test_concessive_subordinators(self):
+        """Test concessive subordinators (although, though, tho)"""
+        texts = [
+            "Although it was raining, we went out",
+            "We continued though it was difficult",
+            "They succeeded, tho nobody believed in them"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            concessive_words = ['although', 'though', 'tho']
+            found = False
+            for word in tagged_words:
+                if word['text'].lower() in concessive_words:
+                    self.assertIn('CONC', word['tags'])
+                    found = True
+            self.assertTrue(found)
+
+    def test_conditional_subordinators(self):
+        """Test conditional subordinators (if, unless)"""
+        texts = [
+            "If it rains, bring an umbrella",
+            "Unless you study, you won't pass",
+            "The experiment will fail if proper controls aren't used"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            conditional_words = ['if', 'unless']
+            found = False
+            for word in tagged_words:
+                if word['text'].lower() in conditional_words:
+                    self.assertIn('COND', word['tags'])
+                    found = True
+            self.assertTrue(found)
+
+    def test_other_subordinators(self):
+        """Test other subordinators"""
+        texts = [
+            "Since you asked, I'll explain",
+            "While the experiment ran, we collected data",
+            "Whereas the first trial succeeded, the second failed"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            found = False
+            for word in tagged_words:
+                if word['text'].lower() in ['since', 'while', 'whereas']:
+                    self.assertIn('OSUB', word['tags'])
+                    found = True
+            self.assertTrue(found)
+
+    def test_complex_other_subordinators(self):
+        """Test multi-word other subordinators"""
+        text = "I'll wait as long as necessary"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        
+        # Find the "as" that starts "as long as"
+        for i, word in enumerate(tagged_words):
+            if word['text'].lower() == 'as' and i + 2 < len(tagged_words):
+                if tagged_words[i+1]['text'].lower() == 'long' and tagged_words[i+2]['text'].lower() == 'as':
+                    self.assertIn('OSUB', word['tags'])
+                    return
+        self.fail("Multi-word subordinator 'as long as' not properly tagged")
+
+    def test_multiple_subordinators(self):
+        """Test text with multiple subordinators"""
+        text = "Although it was difficult, we continued because we believed that if we persisted, we would succeed"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        
+        # Find indices dynamically instead of hardcoding
+        for i, word in enumerate(tagged_words):
+            if word['text'].lower() == 'although':
+                self.assertIn('CONC', word['tags'])
+            elif word['text'].lower() == 'because':
+                self.assertIn('CAUS', word['tags'])
+            elif word['text'].lower() == 'if':
+                self.assertIn('COND', word['tags'])
+
+    def test_complex_osub_cases(self):
+        """Test complex cases of other subordinators"""
+        texts = [
+            "Insofar as the data shows",
+            "Inasmuch as we understand",
+            "Such that the results were clear",
+            "So that we could proceed"
+        ]
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            # These are multi-word subordinators, need to check first word
+            first_word = tagged_words[0]['text'].lower()
+            if first_word in ['insofar', 'inasmuch', 'such', 'so']:
+                self.assertIn('OSUB', tagged_words[0]['tags'])
+
+    def test_subordinator_with_punctuation(self):
+        """Test subordinators with various punctuation patterns"""
+        texts = [
+            "We proceeded, although with caution",
+            "If, and only if, the conditions are met"
+        ]
+        expected_tags = {
+            'although': 'CONC',
+            'if': 'COND'
+        }
+        
+        for text in texts:
+            tagged_words = tag_text(text, pipeline=self.pipeline)
+            found = False
+            for word in tagged_words:
+                word_lower = word['text'].lower()
+                if word_lower in expected_tags:
+                    self.assertIn(expected_tags[word_lower], word['tags'])
+                    found = True
+                    break
+            self.assertTrue(found, f"No subordinator found in text: {text}")
 if __name__ == '__main__':
     unittest.main()

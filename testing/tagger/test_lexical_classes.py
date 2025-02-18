@@ -112,6 +112,61 @@ class TestLexicalClassesFunctions(unittest.TestCase):
         # These should be tagged as DEMO
         self.assertIn('DEMO', tagged_words[7]['tags'])
 
+    def test_perfect_aspect_with_adverb(self):
+        text = "I have really enjoyed the movie."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Have enjoyed should be tagged as PEAS even with intervening adverb
+        self.assertIn('PEAS', tagged_words[1]['tags'])
+
+    def test_perfect_aspect_interrogative(self):
+        text = "Have you seen the movie?"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Have seen should be tagged as PEAS in questions
+        self.assertIn('PEAS', tagged_words[0]['tags'])
+
+    def test_demonstrative_pronoun_with_verb(self):
+        text = "This works well."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # This should be tagged as DEMP when followed by verb
+        self.assertIn('DEMP', tagged_words[0]['tags'])
+
+    def test_demonstrative_pronoun_with_aux(self):
+        text = "Those will arrive tomorrow."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Those should be tagged as DEMP when followed by auxiliary
+        self.assertIn('DEMP', tagged_words[0]['tags'])
+
+    def test_that_as_demonstrative(self):
+        text = "That is interesting."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # That should be tagged as DEMP when followed by is
+        self.assertIn('DEMP', tagged_words[0]['tags'])
+
+    def test_nomz_singular(self):
+        text = "The administration made a decision."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Words ending in -tion should be tagged as NOMZ
+        self.assertIn('NOMZ', tagged_words[1]['tags'])
+        self.assertIn('NOMZ', tagged_words[4]['tags'])
+
+    def test_nomz_plural(self):
+        text = "Many suggestions were made."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Plural forms of -tion words should be tagged as NOMZ
+        self.assertIn('NOMZ', tagged_words[1]['tags'])
+
+    def test_gerund_long_word(self):
+        text = "Understanding complex concepts takes time."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Words >10 chars ending in -ing should be tagged as GER
+        self.assertIn('GER', tagged_words[0]['tags'])
+
+    def test_gerund_short_word(self):
+        text = "Running is good exercise."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Words <=10 chars ending in -ing should not be tagged as GER
+        self.assertNotIn('GER', tagged_words[0]['tags'])
+
 
 if __name__ == '__main__':
     unittest.main()

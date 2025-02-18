@@ -47,5 +47,47 @@ class TestCoordinationFunctions(unittest.TestCase):
         # 'and' should be tagged as ANDC since it's followed by 'why' which is a WH word
         self.assertIn('ANDC', tagged_words[6]['tags'])
 
+    def test_phc_adjectives(self):
+        text = "The car was fast and reliable."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'and' should be tagged as PHC since it coordinates two adjectives
+        self.assertIn('PHC', tagged_words[4]['tags'])
+
+    def test_phc_nouns(self):
+        text = "We bought books and magazines."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'and' should be tagged as PHC since it coordinates two nouns
+        self.assertIn('PHC', tagged_words[3]['tags'])
+
+    def test_phc_adverbs(self):
+        text = "She spoke quickly and clearly."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'and' should be tagged as PHC since it coordinates two adverbs
+        self.assertIn('PHC', tagged_words[3]['tags'])
+
+    def test_phc_verbs(self):
+        text = "He runs and jumps every day."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'and' should be tagged as PHC since it coordinates two verbs
+        self.assertIn('PHC', tagged_words[2]['tags'])
+
+    def test_andc_with_so(self):
+        text = "I finished work, and so I went home."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'and' should be tagged as ANDC since it's followed by 'so'
+        self.assertIn('ANDC', tagged_words[4]['tags'])
+
+    def test_andc_with_then(self):
+        text = "He opened the door, and then walked in."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'and' should be tagged as ANDC since it's followed by 'then'
+        self.assertIn('ANDC', tagged_words[5]['tags'])
+
+    def test_andc_with_demonstrative(self):
+        text = "The car broke down, and that caused problems."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'and' should be tagged as ANDC since it's followed by demonstrative 'that'
+        self.assertIn('ANDC', tagged_words[5]['tags'])
+
 if __name__ == '__main__':
     unittest.main()

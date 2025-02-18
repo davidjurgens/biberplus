@@ -1,3 +1,4 @@
+import warnings
 import functools
 import operator
 from collections import defaultdict
@@ -11,18 +12,24 @@ from biberplus.tagger.constants import BIBER_PLUS_TAGS
 from biberplus.tagger.tagger_utils import load_config, load_pipeline, build_variable_dictionaries
 
 
+warnings.filterwarnings('ignore', category=FutureWarning, message='.*swapaxes.*')
+
+
 def calculate_tag_frequencies(text, pipeline=None, config=None):
     config = config or load_config()
     pipeline = pipeline or load_pipeline(config)
     tags = load_tags(config)
 
     tag_frequencies = defaultdict(list)
-    tagged_words = tag_text(text, pipeline, config)
-    tagged_dataframe = pd.DataFrame(tagged_words)
-    tag_frequencies = count_tags_every_n_tokens(tagged_dataframe, tag_frequencies, tags, config)
+    try:
+        tagged_words = tag_text(text, pipeline, config)
+        tagged_dataframe = pd.DataFrame(tagged_words)
+        tag_frequencies = count_tags_every_n_tokens(tagged_dataframe, tag_frequencies, tags, config)
 
-    return calculate_descriptive_stats(tag_frequencies)
-
+        return calculate_descriptive_stats(tag_frequencies)
+    except Exception as e:
+        print(text)
+        print(e)
 
 def calculate_descriptive_stats(tag_counts):
     rows = []

@@ -78,6 +78,46 @@ class TestReducedFormsDispreferredStructuresFunctions(unittest.TestCase):
         # "They're" should be tagged as CONT
         self.assertIn('CONT', tagged_words[1]['tags'])
 
+    def test_stpr_multiple_cases(self):
+        text = "That's the store I went to. This is what I was thinking of. Who did you talk with?"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Check each stranded preposition
+        self.assertIn('STPR', tagged_words[6]['tags'])  # 'to'
+        self.assertIn('STPR', tagged_words[14]['tags'])  # 'of'
+        self.assertIn('STPR', tagged_words[20]['tags'])  # 'with'
+
+    def test_spin_negative(self):
+        text = "I want to explain this concept."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'to' should NOT be tagged as SPIN since there's no intervening adverb
+        self.assertNotIn('SPIN', tagged_words[2]['tags'])
+
+    def test_spau_modal(self):
+        text = "You should carefully consider the options."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'should' should be tagged as SPAU
+        self.assertIn('SPAU', tagged_words[1]['tags'])
+
+    def test_spau_have(self):
+        text = "They have thoroughly reviewed the document."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'have' should be tagged as SPAU
+        self.assertIn('SPAU', tagged_words[1]['tags'])
+
+    def test_spau_be(self):
+        text = "The results are clearly shown in the graph."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # 'are' should be tagged as SPAU
+        self.assertIn('SPAU', tagged_words[2]['tags'])
+
+    def test_cont_possessive(self):
+        text = "That's John's book. The cat's tail."
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        # Test that possessive 's is not tagged as contraction
+        self.assertNotIn('CONT', tagged_words[1]['tags'])  # "'s" from "That's"
+        self.assertNotIn('CONT', tagged_words[3]['tags'])  # "'s" from "John's"
+        self.assertNotIn('CONT', tagged_words[8]['tags'])  # "'s" from "cat's"
+
 
 if __name__ == '__main__':
     unittest.main()

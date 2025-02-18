@@ -167,7 +167,7 @@ class BiberPlusTagger:
 
     def tag_pit(self, word, previous_words, next_words):
         """ Any pronoun it. Although not specified in Biber (1988), the present program also tags its and
-            itself as “Pronoun it”. """
+            itself as "Pronoun it". """
         if self.helper.is_pronoun(word) and word['text'].lower() in self.patterns['pronoun_it']:
             return 'PIT'
 
@@ -190,15 +190,16 @@ class BiberPlusTagger:
             if next_words[0]:
                 following_word = next_words[0]['text'].lower()
                 following_tag = next_words[0]['xpos']
-
-                # Define conditions for tagging as DEMP
                 is_followed_by_verb = self.helper.is_any_verb(next_words[0])
                 is_followed_by_specifics = following_word in ["'s", "and"]
                 is_followed_by_punct = self.helper.is_punctuation(next_words[0])
-                is_followed_by_wh = following_tag == 'WP'
+
+                # Changed to check any tag starting with 'W'
+                is_followed_by_wh = following_tag.startswith('W')
 
                 if any([is_followed_by_verb, is_followed_by_specifics, is_followed_by_punct, is_followed_by_wh]):
                     return "DEMP"
+                
 
     def tag_prod(self, word, previous_words, next_words):
         """ Pro-verb do. Any form of DO that is used as main verb and, therefore, excluding DO when used as
@@ -220,6 +221,18 @@ class BiberPlusTagger:
                                   previous_words[0]['xpos'] == 'WP'):
             return
 
+        # Exclude DO tokens immediately preceded by any WH word (e.g., "How")
+        if previous_words[0] and previous_words[0]['xpos'].startswith('W'):
+            return
+
+        # Additional check for auxiliary DO at sentence start:
+        # For example, in "Do you know the answer?" token "Do" is followed by a subject pronoun ("you")
+        # and then a verb ("know"), so we should not tag it as PROD.
+        if (previous_words[0] is None and next_words[0] and 
+            self.helper.is_subject_pronoun(next_words[0]) and next_words[1] and 
+            self.helper.is_verb(next_words[1])):
+            return
+
         return "PROD"
 
     """ D) Questions """
@@ -227,26 +240,31 @@ class BiberPlusTagger:
     def tag_whqu(self, word, previous_words, next_words):
         """ Direct WH-questions. Punctuation + WH word + auxiliary verb. Slightly modified to allow
         for intervening word between punctuation and WH word"""
+        if word['xpos'][0] == 'W' and next_words[0]:
+            # Check if next token is auxiliary or (if not) the token after is auxiliary
+            if self.helper.is_auxiliary(next_words[0]) or (len(next_words) > 1 and next_words[1] and self.helper.is_auxiliary(next_words[1])):
+                if self.helper.is_punctuation(previous_words[0]) or (previous_words[1] and self.helper.is_punctuation(previous_words[1])):
+                    return "WHQU"
 
-        if word['xpos'][0] == 'W' and next_words[0] and self.helper.is_auxiliary(next_words[0]):
-            if self.helper.is_punctuation(previous_words[0]) or (
-                    previous_words[1] and self.helper.is_punctuation(previous_words[1])):
-                return "WHQU"
 
     """ E) Nominal Forms """
-
     def tag_nomz(self, word, previous_words, next_words):
-        """ Any noun ending in -tion, -ment, -ness """
-        suffixes = ('ity', 'tion', 'ment', 'ness', 'tions', 'ments', 'nesses')
-
+        suffixes = ('ity','tion','sion','ment','ness','tions','sions','ments','nesses')
         if self.helper.is_noun(word) and word['text'].lower().endswith(suffixes):
             if word['text'].lower() not in self.patterns['nominalizations_stop_list']:
                 return 'NOMZ'
+   
 
     def tag_ger(self, word, previous_words, next_words):
-        """Gerunds with length >= 10 are nominal form (N) that ends in –ing or –ings."""
-        if len(word['text']) >= 10 and word['xpos'].startswith('N') and word['text'].lower().endswith(('ing', 'ings')):
+        # If it's recognized as a verb in gerund form (VBG) *or* recognized as a noun, 
+        # and is 10+ letters ending in "ing" or "ings," then call it 'GER'
+        if (
+        (word['xpos'] == 'VBG' or self.helper.is_noun(word))
+        and len(word['text']) >= 10
+        and word['text'].lower().endswith(('ing','ings'))
+        ):
             return 'GER'
+   
 
     def tag_nn(self, word, previous_words, next_words):
         """ Total other nouns. Any noun not tagged as a nominalisation or a gerund. Plural nouns (NNS) and
@@ -268,6 +286,10 @@ class BiberPlusTagger:
 
         # BE + VBN/VBD
         if is_past_verb(next_words[0]):
+            return "PASS"
+
+        # BE + be + VBN/VBD (handle progressive/passive constructions, e.g. "is being renovated")
+        if next_words[0] and self.helper.is_be(next_words[0]) and is_past_verb(next_words[1]):
             return "PASS"
 
         # BE + ADV + VBN/VBD
@@ -298,8 +320,15 @@ class BiberPlusTagger:
         Allows adverbs or negations to appear between the verb BE and the rest of the pattern.
         """
 
-        # Check if word is BE
         if not self.helper.is_be(word):
+            return None
+
+        # If immediately preceded by an existential "there", do not tag BEMA.
+        if previous_words[0] and previous_words[0]['xpos'] == 'EX':
+            return None
+
+        # If the next word is a past-participle (indicative of a passive construction), do not tag BEMA.
+        if next_words[0] and next_words[0]['xpos'] in ['VBN', 'VBD']:
             return None
 
         valid_tags = ['DT', 'PRP$', 'JJ', 'JJR']
@@ -308,8 +337,9 @@ class BiberPlusTagger:
         if next_words[0] and (next_words[0]['xpos'] in valid_tags or self.helper.is_preposition(next_words[0])):
             return 'BEMA'
 
-        # Preceded by an adverb or negation
-        if next_words[1] and (self.helper.is_adverb(next_words[0]) or self.tag_xx0(next_words[0], None, None)):
+        # Preceded by an adverb or negation - check next_words[0] then next_words[1]
+        if next_words[1] and next_words[0] and (
+            self.helper.is_adverb(next_words[0]) or self.tag_xx0(next_words[0], None, None)):
             if next_words[1]['xpos'] in valid_tags or self.helper.is_preposition(next_words[1]):
                 return 'BEMA'
 
@@ -425,16 +455,19 @@ class BiberPlusTagger:
             - Preceded by a noun.
             - Followed by a verb or an auxiliary verb, possibly with an intervening adverb or negation."""
         if word['text'].lower() != 'that':
-            return
+            return None
 
         if previous_words[0] and next_words[0] and self.helper.is_noun(previous_words[0]):
+            # Check if following word is a verb or auxiliary
             if self.helper.is_verb(next_words[0]) or self.helper.is_auxiliary(next_words[0]):
                 return "TSUB"
 
-            # Allow for intervening RB or XXO
-            if next_words[1]:
-                allowed_interventions = self.tag_xx0(next_words[0], None, None) or self.helper.is_adverb(next_words[0])
-                if allowed_interventions and self.helper.is_any_verb(next_words[1]):
+            # Allow for intervening RB or XXO.
+            # Make sure next_words[0] exists before passing it to tag_xx0.
+            if next_words[1] and next_words[0] and (
+                self.tag_xx0(next_words[0], None, None) or self.helper.is_adverb(next_words[0])
+            ):
+                if self.helper.is_any_verb(next_words[1]):
                     return "TSUB"
 
     def tag_tobj(self, word, previous_words, next_words):
@@ -561,30 +594,27 @@ class BiberPlusTagger:
         An adjective is tagged as predicative if it is
         preceded by another predicative adjective followed by a phrasal coordinator e.g. the horse is big and fast """
 
-        # Check if the word is an adjective
         if not self.helper.is_adjective(word):
-            return
+            return None
 
         # Handle direct BE->ADJ case
         if previous_words[0] and self.helper.is_be(previous_words[0]):
-            # BE -> ADJ -> NOT (JJ|RB|N)
-            next_word_is_not_adj_noun_adv = next_words[0] and not (
-                    self.helper.is_adjective(next_words[0]) or
-                    self.helper.is_adverb(next_words[0]) or
-                    self.helper.is_noun(next_words[0])
-            )
-            if next_word_is_not_adj_noun_adv:
+            if next_words[0] and not (
+                self.helper.is_adjective(next_words[0]) or
+                self.helper.is_adverb(next_words[0]) or
+                self.helper.is_noun(next_words[0])
+            ):
                 return "PRED"
 
-            # Allow for intervening negation/adverb: BE -> ADJ -> ADV|XXO -> NOT (JJ|RB|N)
-            if len(next_words) > 1 and (
-                    self.tag_xx0(next_words[0], None, None) or self.helper.is_adverb(next_words[0])):
-                next_next_word_is_not_adj_noun_adv = not (
-                        self.helper.is_adjective(next_words[1]) or
-                        self.helper.is_noun(next_words[1]) or
-                        self.helper.is_adverb(next_words[1])
-                )
-                if next_next_word_is_not_adj_noun_adv:
+            # Allow for intervening negation/adverb. Ensure next_words[0] exists.
+            if len(next_words) > 1 and next_words[0] and (
+                self.tag_xx0(next_words[0], None, None) or self.helper.is_adverb(next_words[0])
+            ):
+                if next_words[1] and not (
+                    self.helper.is_adjective(next_words[1]) or
+                    self.helper.is_noun(next_words[1]) or
+                    self.helper.is_adverb(next_words[1])
+                ):
                     return "PRED"
 
         # Handle phrasal coordinator case
@@ -719,7 +749,7 @@ class BiberPlusTagger:
             return 'NEMD'
 
     def tag_prmd(self, word, previous_words, next_words):
-        """ Predictive modals. will, would, shall and their contractions: ‘d_MD, ll_MD, wo_MD, sha_MD"""
+        """ Predictive modals. will, would, shall and their contractions: 'd_MD, ll_MD, wo_MD, sha_MD"""
         if word['text'].lower() in self.patterns['predictive_modals'] and word['xpos'] == 'MD':
             return 'PRMD'
 
@@ -748,18 +778,10 @@ class BiberPlusTagger:
     """ N) Reduced forms and dispreferred structures """
 
     def tag_cont(self, word, previous_words, next_words):
-        """
-        Tag contractions. This function checks for two patterns:
-        1) Words ending with "n't" (e.g., isn't, won't).
-        2) Words beginning with an apostrophe and have more characters following the apostrophe (e.g., 're, 'm).
-        """
-
-        # Check for words ending with "n't"
-        if word['text'].lower().endswith("n't"):
+        text = word['text'].lower()
+        if "n't" in text:
             return 'CONT'
-
-        # Check for words starting with an apostrophe and have additional characters
-        elif word['text'].startswith("'") and len(word['text']) > 1:
+        elif text.startswith("'") and text not in {"'s"}:
             return 'CONT'
 
     def tag_thatd(self, word, previous_words, next_words):
@@ -801,14 +823,14 @@ class BiberPlusTagger:
     def tag_stpr(self, word, previous_words, next_words):
         """ Stranded preposition. Preposition followed by a punctuation mark.
         Update from Biber: can't be the word besides. E.g. the candidates I was thinking 'of',"""
-        if word['text'].lower() in self.patterns['prepositional_phrases'] and word['text'].lower() != 'besides':
+        if self.helper.is_preposition(word) and word['text'].lower() != 'besides':
             if next_words[0] and self.helper.is_punctuation(next_words[0]):
                 return "STPR"
 
     def tag_spin(self, word, previous_words, next_words):
         """ Split infinitives. Every time an infinitive marker to is followed by one or two adverbs and
         a verb base form. e.g. he wants to convincingly prove that """
-        if 'TO' not in word['tags']:
+        if word['text'].lower() != 'to':
             return
 
         # Check if the next word is an adverb
@@ -863,35 +885,40 @@ class BiberPlusTagger:
         if word['text'].lower() != 'and':
             return
 
-        # Followed by WH word, CAUS, CONC, COND, OSUB, DPAR, CONJ
-        if next_words[0] and (next_words[0]['xpos'].startswith('W') or
-                              self.tag_caus(next_words[0], previous_words[1:], next_words[1:]) or
-                              self.tag_conc(next_words[0], previous_words[1:], next_words[1:]) or
-                              self.tag_cond(next_words[0], previous_words[1:], next_words[1:]) or
-                              self.tag_osub(next_words[0], previous_words[1:], next_words[1:]) or
-                              self.tag_dpar(next_words[0], previous_words[1:], next_words[1:]) or
-                              self.tag_conj(next_words[0], previous_words[1:], next_words[1:])):
-            return "ANDC"
-
-        # Preceded by any punctuation
-        if previous_words[0] and self.helper.is_punctuation(previous_words[0]):
-            return "ANDC"
-
-        # Preceded by a comma
-        if previous_words[0] and previous_words[0]['text'] == ',':
-            # Followed by it, so, then, you or DEMP or personal pronouns
-            if next_words[0] and (next_words[0]['text'] in ['it', 'so', 'then', 'you'] or
-                                  self.tag_demp(next_words[0], previous_words[1:], next_words[1:])
-                                  or next_words[0]['text'].lower() in self.patterns['subject_pronouns']):
+        # Condition (3): Check if "and" is followed by trigger words or punctuation signals
+        if next_words[0]:
+            triggers = set(['it', 'so', 'then', 'you'])
+            if self.patterns.get('demonstrative_pronouns'):
+                triggers.update([w.lower() for w in self.patterns['demonstrative_pronouns']])
+            if self.patterns.get('subject_pronouns'):
+                triggers.update([w.lower() for w in self.patterns['subject_pronouns']])
+            if next_words[0]['text'].lower() in triggers:
                 return "ANDC"
-            # Followed by there + BE
-            if next_words[1] and next_words[0] == 'there' and self.helper.is_be(next_words[1]):
+            if next_words[0]['text'].lower() == 'there' and next_words[1] and self.helper.is_be(next_words[1]):
                 return "ANDC"
+            if next_words[0]['xpos'].startswith('W'):
+                return "ANDC"
+            if (self.tag_caus(next_words[0], previous_words[1:], next_words[1:]) or
+                self.tag_conc(next_words[0], previous_words[1:], next_words[1:]) or
+                self.tag_cond(next_words[0], previous_words[1:], next_words[1:]) or
+                self.tag_osub(next_words[0], previous_words[1:], next_words[1:]) or
+                self.tag_dpar(next_words[0], previous_words[1:], next_words[1:]) or
+                self.tag_conj(next_words[0], previous_words[1:], next_words[1:])):
+                return "ANDC"
+
+        # Condition (2): If the token immediately before "and" is punctuation (or its text ends with a punctuation mark)
+        if previous_words[0]:
+            prev_text = previous_words[0]['text']
+            if self.helper.is_punctuation(previous_words[0]) or (prev_text and prev_text[-1] in [',', ';', ':']):
+                return "ANDC"
+        return
 
     """ P) Negation """
 
     def tag_xx0(self, word, previous_words, next_words):
-        """ Analytic negation: word 'not' and to the item n’t_RB"""
+        """ Analytic negation: word 'not' and to the item n't_RB"""
+        if not word:  # or `if word is None:`
+            return None
         if word['text'].lower() in self.patterns['analytic_negation']:
             return 'XX0'
 
@@ -902,8 +929,7 @@ class BiberPlusTagger:
         next_word_conditions = (
             self.helper.is_adjective(next_words[0]),
             self.helper.is_noun(next_words[0]),
-            self.helper.is_proper_noun(next_words[0])
-        )
+            self.helper.is_proper_noun(next_words[0]))
 
         if any(next_word_conditions):
             return 'SYNE'
@@ -976,7 +1002,8 @@ class BiberPlusTagger:
             return "LAUGH"
 
     def tag_possessive_pronoun(self, word, previous_words, next_words):
-        if word['xpos'][:3] == 'PRP':
+        standalone_possessives = {'mine', 'yours', 'his', 'hers', 'ours', 'theirs'}
+        if word['xpos'][:3] == 'PRP' or word['text'].lower() in standalone_possessives:
             return 'PRP'
 
     def tag_preposition(self, word, previous_words, next_words):
