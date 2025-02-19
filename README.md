@@ -36,18 +36,18 @@ Biberplus is a pure Python implementation of the linguistic tagging system intro
 
 ## Installation
 
-### From GitHub (Latest Development Version)
-```bash
-pip install git+https://github.com/davidjurgens/biberplus
-```
+### From PyPI (Stable Release)
+Install the latest version (0.3.0) from PyPI:
 
-### From PyPI (When Released)
 ```bash
 pip install biberplus
 ```
 
-**Note:**  
-You also need spaCy and its English model. If you haven't installed it already, run:
+For more details and package history, visit the [Biberplus project page on PyPI](https://pypi.org/project/biberplus/0.3.0/).
+
+**Important:**  
+Biberplus depends on spaCy for text processing. After installing biberplus, you must manually download the spaCy English model by running:
+
 ```bash
 python -m spacy download en_core_web_sm
 ```
@@ -105,7 +105,38 @@ frequencies_df = calculate_tag_frequencies("Your sample text goes here", custom_
 print(frequencies_df)
 ```
 
-### 3. Text Embeddings
+### 3. Word-Level Tagging
+
+See exactly which tags are applied to each word:
+```python
+import spacy
+from biberplus.tagger import tag_text, load_config, load_pipeline
+
+# Load configuration and pipeline
+config = load_config()
+pipeline = load_pipeline(config)
+
+# Your test sentence
+text = "It doesn't seem likely that this will work."
+
+# Get tagged words
+tagged_words = tag_text(text, pipeline=pipeline)
+
+# Print each word and its tags
+for word in tagged_words:
+    print(f"Word: {word['text']:<15} Tags: {', '.join(word['tags'])}")
+```
+
+Example output:
+```
+Word: It              Tags: it, PIT, CAP, PRP, SBJP
+Word: does            Tags: VPRT, SPAU
+Word: n't             Tags: XX0, CONT, RB
+Word: seem            Tags: SMP, INF
+Word: likely          Tags: JJ
+```
+
+### 4. Text Embeddings
 
 Generate an embedding vector from the textual data:
 ```python
@@ -113,11 +144,11 @@ from biberplus.tagger import load_config
 from biberplus.reducer import encode_text
 
 config = load_config()
-embedding = encode_text("Your sample text goes here", config)
+embedding = encode_text(config, "Your sample text goes here")
 print(embedding)
 ```
 
-### 4. Dimension Reduction
+### 5. Dimension Reduction
 
 **Using PCA:**
 ```python
