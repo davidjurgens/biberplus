@@ -1,9 +1,11 @@
-spacy~=3.5.1
-pandas==1.5.3
-numpy==1.24.1
-tqdm~=4.64.1
+spacy>=3.0.0
+pandas
+numpy
+tqdm
 confection
 PyYAML
 blis
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl
 factor_analyzer
+matplotlib
+seaborn

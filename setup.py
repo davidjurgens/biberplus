@@ -13,10 +13,10 @@ setup(
     include_package_data=True,
     package_data={'': ['tagger/constants/*.txt', 'tagger/config.yaml']},
     install_requires=[
-        "pandas==1.5.3",
-        "numpy==1.24.1",
-        "spacy~=3.5.1",
-        "tqdm~=4.64.1",
+        "pandas",
+        "numpy",
+        "spacy>=3.0.0",
+        "tqdm",
         "blis",
         "confection",
         "PyYAML",
@@ -24,7 +24,7 @@ setup(
         "matplotlib",
         "seaborn"
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
