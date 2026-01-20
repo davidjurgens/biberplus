@@ -1,24 +1,24 @@
 import os
-from glob import glob
+from pathlib import Path
 
 import spacy
 import yaml
 
 
 def load_config():
-    config_fp = os.path.dirname(__file__) + '/config.yaml'
+    config_fp = Path(os.path.dirname(__file__)) / 'config.yaml'
     with open(config_fp) as f:
         return yaml.safe_load(f)
 
 
 def build_variable_dictionaries():
-    script_dir = os.path.dirname(__file__)
-    constant_files = glob(script_dir + '/constants/*.txt')
+    script_dir = Path(os.path.dirname(__file__))
+    constant_files = script_dir.glob('constants/*.txt')
     variables_dict = {}
 
     for constant_file in constant_files:
         # E.g. constants/suasive_verbs.txt -> suasive_verbs
-        file_name = constant_file.split('/')[-1].replace('.txt', '')
+        file_name = constant_file.stem
         variables_dict[file_name] = read_in_variables(constant_file)
 
     return variables_dict
