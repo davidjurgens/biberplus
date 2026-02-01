@@ -2,14 +2,24 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, EarlyStoppingCallback
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    TrainingArguments,
+    EarlyStoppingCallback,
+)
 
 import wandb
 import logging
 
-sys.path.append('../..')
+sys.path.append("../..")
 
-from modeling.tagger.train_utils import StreamingDataset, compute_metrics, compute_tag_level_metrics, EvalSamplingTrainer
+from modeling.tagger.train_utils import (
+    StreamingDataset,
+    compute_metrics,
+    compute_tag_level_metrics,
+    EvalSamplingTrainer,
+)
 
 # Path Configuration
 BASE_DIR = "/shared/3/projects/hiatus/tagged_data/models"
@@ -22,7 +32,9 @@ RUN_DIR = os.path.join(BASE_DIR, MODEL_NAME, RUN_NAME)
 OUTPUT_DIR = os.path.join(RUN_DIR, "results")
 WANDB_RUN_NAME = f"{MODEL_NAME}-{RUN_NAME}"
 MODEL_SAVE_PATH = os.path.join(RUN_DIR, "best_model")
-TAG_PERFORMANCE_SUMMARY_PATH = os.path.join(RUN_DIR, "tag_level_performance_summary.csv")
+TAG_PERFORMANCE_SUMMARY_PATH = os.path.join(
+    RUN_DIR, "tag_level_performance_summary.csv"
+)
 
 # Create necessary directories
 try:
@@ -36,8 +48,8 @@ except Exception as e:
 # Add logging configuration
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
@@ -56,18 +68,32 @@ logger.info(f"Loading tokenizer and model from {MODEL_NAME}...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 logger.info("Initializing streaming datasets...")
-train_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/biber-aggregate/binary_train.jsonl', tokenizer, max_length=512)
-dev_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/biber-aggregate/binary_dev.jsonl', tokenizer, max_length=512)
-test_dataset = StreamingDataset('/shared/3/projects/hiatus/tagged_data/biber-aggregate/binary_test.jsonl', tokenizer, max_length=512)
+train_dataset = StreamingDataset(
+    "/shared/3/projects/hiatus/tagged_data/biber-aggregate/binary_train.jsonl",
+    tokenizer,
+    max_length=512,
+)
+dev_dataset = StreamingDataset(
+    "/shared/3/projects/hiatus/tagged_data/biber-aggregate/binary_dev.jsonl",
+    tokenizer,
+    max_length=512,
+)
+test_dataset = StreamingDataset(
+    "/shared/3/projects/hiatus/tagged_data/biber-aggregate/binary_test.jsonl",
+    tokenizer,
+    max_length=512,
+)
 
 logger.info(f"Loading tokenizer and model from {MODEL_NAME}...")
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL_NAME,
     problem_type="multi_label_classification",
-    num_labels=len(train_dataset.label_columns)
-).to('cuda')
+    num_labels=len(train_dataset.label_columns),
+).to("cuda")
 
-logger.info(f"Dataset sizes - Train: {train_dataset.total_rows}, Dev: {dev_dataset.total_rows}, Test: {test_dataset.total_rows}")
+logger.info(
+    f"Dataset sizes - Train: {train_dataset.total_rows}, Dev: {dev_dataset.total_rows}, Test: {test_dataset.total_rows}"
+)
 logger.info(f"Number of labels: {len(train_dataset.label_columns)}")
 logger.info(f"Labels: {', '.join(train_dataset.label_columns)}")
 
@@ -89,8 +115,8 @@ wandb.init(
         "labels": train_dataset.label_columns,
         "train_size": train_dataset.total_rows,
         "dev_size": dev_dataset.total_rows,
-        "test_size": test_dataset.total_rows
-    }
+        "test_size": test_dataset.total_rows,
+    },
 )
 
 training_args = TrainingArguments(
@@ -112,7 +138,7 @@ training_args = TrainingArguments(
     bf16=True,
     dataloader_num_workers=16,
     eval_accumulation_steps=8,
-    gradient_checkpointing=True
+    gradient_checkpointing=True,
 )
 
 trainer = EvalSamplingTrainer(
@@ -122,9 +148,7 @@ trainer = EvalSamplingTrainer(
     eval_dataset=dev_dataset,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics,
-    callbacks=[
-        EarlyStoppingCallback(early_stopping_patience=5)
-    ]
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
 )
 
 train_result = trainer.train()
@@ -134,14 +158,16 @@ wandb.log({"training_loss": train_result.metrics["train_loss"]})
 logger.info("Evaluating on test set...")
 test_results = trainer.evaluate(test_dataset)
 logger.info(f"Test results: {test_results}")
-wandb.log({
-    "test_precision_micro": test_results["eval_precision_micro"],
-    "test_recall_micro": test_results["eval_recall_micro"],
-    "test_f1_micro": test_results["eval_f1_micro"],
-    "test_precision_macro": test_results["eval_precision_macro"],
-    "test_recall_macro": test_results["eval_recall_macro"],
-    "test_f1_macro": test_results["eval_f1_macro"]
-})
+wandb.log(
+    {
+        "test_precision_micro": test_results["eval_precision_micro"],
+        "test_recall_micro": test_results["eval_recall_micro"],
+        "test_f1_micro": test_results["eval_f1_micro"],
+        "test_precision_macro": test_results["eval_precision_macro"],
+        "test_recall_macro": test_results["eval_recall_macro"],
+        "test_f1_macro": test_results["eval_f1_macro"],
+    }
+)
 
 logger.info(f"Saving model to {MODEL_SAVE_PATH}")
 trainer.save_model(MODEL_SAVE_PATH)
@@ -155,7 +181,7 @@ test_predictions = trainer.predict(test_dataset)
 tag_level_metrics = compute_tag_level_metrics(
     test_predictions.predictions,
     test_predictions.label_ids,
-    train_dataset.label_columns
+    train_dataset.label_columns,
 )
 
 # Log detailed results
@@ -168,9 +194,9 @@ for tag, metrics in tag_level_metrics.items():
 
 # Calculate and log overall statistics
 avg_metrics = {
-    'avg_precision': np.mean([m['precision'] for m in tag_level_metrics.values()]),
-    'avg_recall': np.mean([m['recall'] for m in tag_level_metrics.values()]),
-    'avg_f1': np.mean([m['f1'] for m in tag_level_metrics.values()])
+    "avg_precision": np.mean([m["precision"] for m in tag_level_metrics.values()]),
+    "avg_recall": np.mean([m["recall"] for m in tag_level_metrics.values()]),
+    "avg_f1": np.mean([m["f1"] for m in tag_level_metrics.values()]),
 }
 
 logger.info("\nOverall Statistics:")
@@ -182,10 +208,10 @@ for metric_name, value in avg_metrics.items():
 logger.info(f"Saving performance summary to {TAG_PERFORMANCE_SUMMARY_PATH}")
 summary_data = [
     {
-        'Tag': tag,
-        'Precision': metrics['precision'],
-        'Recall': metrics['recall'],
-        'F1': metrics['f1']
+        "Tag": tag,
+        "Precision": metrics["precision"],
+        "Recall": metrics["recall"],
+        "F1": metrics["f1"],
     }
     for tag, metrics in tag_level_metrics.items()
 ]

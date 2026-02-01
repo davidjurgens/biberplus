@@ -7,7 +7,9 @@ from biberplus.reducer import encode_text
 from biberplus.tagger.tagger_utils import load_tokenizer
 
 
-def tag_partitions(config, input_directory, output_directory, num_workers, default_niceness=20):
+def tag_partitions(
+    config, input_directory, output_directory, num_workers, default_niceness=20
+):
     process_args = build_process_args(config, input_directory, output_directory)
 
     def set_niceness():
@@ -42,7 +44,7 @@ def build_process_args(config, input_directory, output_directory):
     process_args = []
 
     for fp in partition_files:
-        fname = fp.rsplit('/', 1)[-1].replace('.jsonl', '') + '-tagged.jsonl'
+        fname = fp.rsplit("/", 1)[-1].replace(".jsonl", "") + "-tagged.jsonl"
         out = f"{output_directory}{fname}"
         process_args.append((config, fp, out))
 
@@ -51,10 +53,10 @@ def build_process_args(config, input_directory, output_directory):
 
 def tag_object(obj, config, tokenizer):
     try:
-        num_tokens = len(tokenizer(obj['fullText']))
-        obj['num_tokens'] = num_tokens
+        num_tokens = len(tokenizer(obj["fullText"]))
+        obj["num_tokens"] = num_tokens
         if num_tokens >= 10:
-            obj['encodings'] = encode_text(text=obj['fullText'], config=config)
+            obj["encodings"] = encode_text(text=obj["fullText"], config=config)
     except Exception:
         pass
 
@@ -62,5 +64,5 @@ def tag_object(obj, config, tokenizer):
 
 
 def append_chunk(output_file, tagged_objects):
-    with jsonlines.open(output_file, mode='a') as writer:
+    with jsonlines.open(output_file, mode="a") as writer:
         writer.write_all(tagged_objects)

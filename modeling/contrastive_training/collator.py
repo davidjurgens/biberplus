@@ -21,16 +21,25 @@ class ContrastiveCollator:
         candidate_batch = self._prepare_batch(candidate_sents)
 
         if self.evaluate:
-            query_authors = [feature['query_authorID'] for feature in features]
-            target_authors = [feature['candidate_authorID'] for feature in features]
+            query_authors = [feature["query_authorID"] for feature in features]
+            target_authors = [feature["candidate_authorID"] for feature in features]
 
             return query_batch, candidate_batch, query_authors, target_authors
         else:
-            return query_batch, candidate_batch,
+            return (
+                query_batch,
+                candidate_batch,
+            )
 
     def _encode_text(self, features, feature_name):
-        return [{'input_ids': self.tokenizer(feature[feature_name])['input_ids'][:self.max_length]} for feature in
-                features]
+        return [
+            {
+                "input_ids": self.tokenizer(feature[feature_name])["input_ids"][
+                    : self.max_length
+                ]
+            }
+            for feature in features
+        ]
 
     def _prepare_batch(self, sents):
         return self.tokenizer.pad(
@@ -57,20 +66,33 @@ class ContrastiveBiberCollator:
         query_batch = self._prepare_batch(query_sents)
         candidate_batch = self._prepare_batch(candidate_sents)
 
-        query_encodings = [feature['query_biberPlus'] for feature in features]
-        candidate_encodings = [feature['candidate_biberPlus'] for feature in features]
+        query_encodings = [feature["query_biberPlus"] for feature in features]
+        candidate_encodings = [feature["candidate_biberPlus"] for feature in features]
 
         if self.evaluate:
-            query_authors = [feature['query_authorID'] for feature in features]
-            target_authors = [feature['candidate_authorID'] for feature in features]
+            query_authors = [feature["query_authorID"] for feature in features]
+            target_authors = [feature["candidate_authorID"] for feature in features]
 
-            return query_batch, candidate_batch, query_encodings, candidate_encodings, query_authors, target_authors
+            return (
+                query_batch,
+                candidate_batch,
+                query_encodings,
+                candidate_encodings,
+                query_authors,
+                target_authors,
+            )
         else:
             return query_batch, candidate_batch, query_encodings, candidate_encodings
 
     def _encode_text(self, features, feature_name):
-        return [{'input_ids': self.tokenizer(feature[feature_name])['input_ids'][:self.max_length]} for feature in
-                features]
+        return [
+            {
+                "input_ids": self.tokenizer(feature[feature_name])["input_ids"][
+                    : self.max_length
+                ]
+            }
+            for feature in features
+        ]
 
     def _prepare_batch(self, sents):
         return self.tokenizer.pad(

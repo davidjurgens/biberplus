@@ -9,12 +9,12 @@ class FunctionWordsTagger:
         if function_words:
             self.function_words = set([w.lower().strip() for w in function_words])
         else:
-            self.function_words = build_variable_dictionaries()['function_words']
+            self.function_words = build_variable_dictionaries()["function_words"]
 
     def tag(self):
         for word in self.tagged_words:
-            if word['text'].lower() in self.function_words:
-                word['tags'].append(word['text'].lower())
+            if word["text"].lower() in self.function_words:
+                word["tags"].append(word["text"].lower())
         return self.tagged_words
 
     # def is_function_word(self, word):
@@ -31,9 +31,11 @@ def tag_function_words(words, function_words=None, return_vector=False):
     if function_words:
         function_words = set([w.lower().strip() for w in function_words])
     else:
-        function_words = build_variable_dictionaries()['function_words']
+        function_words = build_variable_dictionaries()["function_words"]
 
-    function_word_counts = Counter(word.lower() for word in words if word.lower() in function_words)
+    function_word_counts = Counter(
+        word.lower() for word in words if word.lower() in function_words
+    )
 
     # Sort into the original order of the function words variable
     if return_vector:

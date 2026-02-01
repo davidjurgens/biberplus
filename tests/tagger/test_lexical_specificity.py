@@ -8,14 +8,13 @@ from biberplus.tagger.biber_plus_tagger import BiberPlusTagger
 
 
 class TestLexicalSpecificityFunctions(unittest.TestCase):
-
     def setUp(self) -> None:
-        self.pipeline = spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner'])
+        self.pipeline = spacy.load(
+            "en_core_web_sm", disable=["parser", "lemmatizer", "ner"]
+        )
 
     def test_calculate_mean_word_length(self):
-        sample_data = {
-            'text': ["apple", "banana", "cherry", "date", "fig"]
-        }
+        sample_data = {"text": ["apple", "banana", "cherry", "date", "fig"]}
         df = pd.DataFrame(sample_data)
 
         result = calculate_mean_word_length(df)
@@ -23,7 +22,16 @@ class TestLexicalSpecificityFunctions(unittest.TestCase):
 
     def test_calculate_type_token_ratio_without_limit(self):
         sample_data = {
-            'text': ["apple", "apple", "banana", "banana", "cherry", "date", "date", "fig"]
+            "text": [
+                "apple",
+                "apple",
+                "banana",
+                "banana",
+                "cherry",
+                "date",
+                "date",
+                "fig",
+            ]
         }
         df = pd.DataFrame(sample_data)
 
@@ -32,7 +40,16 @@ class TestLexicalSpecificityFunctions(unittest.TestCase):
 
     def test_calculate_type_token_ratio_with_limit(self):
         sample_data = {
-            'text': ["apple", "apple", "banana", "banana", "cherry", "date", "date", "fig"]
+            "text": [
+                "apple",
+                "apple",
+                "banana",
+                "banana",
+                "cherry",
+                "date",
+                "date",
+                "fig",
+            ]
         }
         df = pd.DataFrame(sample_data)
 
@@ -41,8 +58,8 @@ class TestLexicalSpecificityFunctions(unittest.TestCase):
 
     def test_calculate_total_adverbs(self):
         sample_data = {
-            'text': ["quickly", "runs", "slowly", "jumps"],
-            'upos': ["ADV", "VERB", "ADV", "VERB"]
+            "text": ["quickly", "runs", "slowly", "jumps"],
+            "upos": ["ADV", "VERB", "ADV", "VERB"],
         }
         df = pd.DataFrame(sample_data)
 
@@ -54,5 +71,6 @@ class TestLexicalSpecificityFunctions(unittest.TestCase):
     def test_calculate_tag_frequencies(self):
         pass
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

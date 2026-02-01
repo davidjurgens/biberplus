@@ -40,13 +40,13 @@ def save_partition(json_lines, output_directory, index):
     out = os.path.join(output_directory, f"partition-{index}.jsonl")
     logging.info(f"Saving {out}")
 
-    with jsonlines.open(out, mode='w') as writer:
+    with jsonlines.open(out, mode="w") as writer:
         writer.write_all(json_lines)
 
 
 def count_lines(input_file):
     """Count the number of lines in the file."""
-    with open(input_file, 'rb') as f:
+    with open(input_file, "rb") as f:
         return sum(1 for _ in f)
 
 
@@ -54,7 +54,7 @@ def join_tagged_files(input_directory, output_file):
     """Join all tagged files from the input directory into one output file."""
     tagged_files = glob(os.path.join(input_directory, "*-tagged.jsonl"))
 
-    with jsonlines.open(output_file, mode='w') as writer:
+    with jsonlines.open(output_file, mode="w") as writer:
         for tagged_file in tqdm(tagged_files, desc="Merging tagged files"):
             with jsonlines.open(tagged_file) as reader:
                 for obj in reader:
