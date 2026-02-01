@@ -35,22 +35,32 @@ Biberplus is a pure Python implementation of the linguistic tagging system intro
 ---
 
 ## Installation
-
-### From PyPI (Stable Release)
-Install the latest version (0.3.0) from PyPI:
-
 ```bash
 pip install biberplus
 ```
 
-For more details and package history, visit the [Biberplus project page on PyPI](https://pypi.org/project/biberplus/0.3.0/).
-
-**Important:**  
-Biberplus depends on spaCy for text processing. After installing biberplus, you must manually download the spaCy English model by running:
-
+Biberplus requires a spaCy language model. After installation, download one:
 ```bash
 python -m spacy download en_core_web_sm
 ```
+
+### Optional extras
+
+For PCA/factor analysis plotting functions:
+
+```bash
+pip install biberplus[plots]
+```
+
+For development (pytest, ruff):
+
+```bash
+pip install biberplus[dev]
+```
+
+## Dependencies
+
+Python 3.10+ and pandas, NumPy, spaCy, tqdm, PyYAML, and factor_analyzer.
 
 ---
 

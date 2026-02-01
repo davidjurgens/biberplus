@@ -44,14 +44,16 @@ dependencies = [
     "tqdm",
     "PyYAML",
     "factor_analyzer",
-    "matplotlib",
-    "seaborn",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.14.0",
+]
+plots = [
+    "matplotlib",
+    "seaborn",
 ]
 
 [project.urls]
