@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -27,6 +27,16 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
+keywords = [
+    "nlp",
+    "linguistics",
+    "biber",
+    "register",
+    "corpus",
+    "text-analysis",
+    "spacy",
+    "variation",
+]
 dependencies = [
     "pandas",
     "numpy",
@@ -44,4 +54,4 @@ Repository = "https://github.com/davidjurgens/biberplus"
 Issues = "https://github.com/davidjurgens/biberplus/issues"
 
 [tool.setuptools.package-data]
-"*" = ["tagger/constants/*.txt", "tagger/config.yaml"]
+biberplus = ["tagger/constants/*.txt", "tagger/config.yaml"]
