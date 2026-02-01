@@ -248,7 +248,8 @@ class StyleContrastiveModel(nn.Module):
                         if self.wandb:
                             train_log = {
                                 "Train Overall Loss": running_loss / args.grad_acc,
-                                "Train MLM Loss": running_mlm_loss / args.grad_acc,
+                                "Train Contrastive Loss": running_contrastive_loss
+                                / args.grad_acc,
                                 "Train Style Loss": running_style_loss / args.grad_acc,
                                 "Train Adversarial Training Loss": running_adversarial_loss
                                 / args.grad_acc,
@@ -257,7 +258,7 @@ class StyleContrastiveModel(nn.Module):
                             print(train_log)
                         (
                             running_loss,
-                            running_mlm_loss,
+                            running_contrastive_loss,
                             running_style_loss,
                             running_adversarial_loss,
                         ) = 0, 0, 0, 0
