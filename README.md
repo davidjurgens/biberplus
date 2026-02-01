@@ -11,6 +11,7 @@ Biberplus is a pure Python implementation of the linguistic tagging system intro
 
 - [Features](#features)
 - [Installation](#installation)
+  - [Optional extras](#optional-extras)
 - [Quickstart Guide](#quickstart-guide)
   - [Biber Tagger](#1-biber-tagger)
   - [Function Words Tagger](#2-function-words-tagger)
@@ -35,11 +36,19 @@ Biberplus is a pure Python implementation of the linguistic tagging system intro
 ---
 
 ## Installation
+
 ```bash
 pip install biberplus
 ```
 
-Biberplus requires a spaCy language model. After installation, download one:
+Requires:
+
+- Python 3.10+
+- pandas, NumPy, spaCy, tqdm, PyYAML, factor_analyzer.
+- a spaCy English language model
+
+After installation, download a spaCy model with:
+
 ```bash
 python -m spacy download en_core_web_sm
 ```
@@ -52,15 +61,18 @@ For PCA/factor analysis plotting functions:
 pip install biberplus[plots]
 ```
 
-For development (pytest, ruff):
+For development (ruff, flake8):
 
 ```bash
 pip install biberplus[dev]
 ```
 
-## Dependencies
+Then run linting with:
 
-Python 3.10+ and pandas, NumPy, spaCy, tqdm, PyYAML, and factor_analyzer.
+```bash
+ruff check .
+flake8 .
+```
 
 ---
 
@@ -69,6 +81,7 @@ Python 3.10+ and pandas, NumPy, spaCy, tqdm, PyYAML, and factor_analyzer.
 ### 1. Biber Tagger
 
 **Tag a string using the default configuration:**
+
 ```python
 from biberplus.tagger import calculate_tag_frequencies
 
@@ -77,6 +90,7 @@ print(frequencies_df)
 ```
 
 **Tag a large corpus with GPU and multi-processing:**
+
 ```python
 from biberplus.tagger import load_config, load_pipeline, calculate_tag_frequencies
 
@@ -90,6 +104,7 @@ print(frequencies_df)
 ### 2. Function Words Tagger
 
 **Using the default list:**
+
 ```python
 from biberplus.tagger import load_config, calculate_tag_frequencies
 
@@ -100,6 +115,7 @@ print(frequencies_df)
 ```
 
 **Using a custom list:**
+
 ```python
 from biberplus.tagger import load_config, calculate_tag_frequencies
 
@@ -118,6 +134,7 @@ print(frequencies_df)
 ### 3. Word-Level Tagging
 
 See exactly which tags are applied to each word:
+
 ```python
 import spacy
 from biberplus.tagger import tag_text, load_config, load_pipeline
@@ -138,6 +155,7 @@ for word in tagged_words:
 ```
 
 Example output:
+
 ```
 Word: It              Tags: it, PIT, CAP, PRP, SBJP
 Word: does            Tags: VPRT, SPAU
@@ -149,6 +167,7 @@ Word: likely          Tags: JJ
 ### 4. Text Embeddings
 
 Generate an embedding vector from the textual data:
+
 ```python
 from biberplus.tagger import load_config
 from biberplus.reducer import encode_text
@@ -161,6 +180,7 @@ print(embedding)
 ### 5. Dimension Reduction
 
 **Using PCA:**
+
 ```python
 from biberplus.tagger import load_config, load_pipeline, calculate_tag_frequencies
 from biberplus.reducer import tags_pca
