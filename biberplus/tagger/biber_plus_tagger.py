@@ -1226,7 +1226,7 @@ class BiberPlusTagger:
 
     def tag_emoticon(self, word, previous_words, next_words):
         if self.helper.is_punctuation(word):
-            emoticon_pattern = re.compile("[:;=](?:-)?[)DPp\/]")
+            emoticon_pattern = re.compile("[:;=](?:-)?[)DPp/]")
             if re.search(emoticon_pattern, word["text"]):
                 return "EMOT"
 
