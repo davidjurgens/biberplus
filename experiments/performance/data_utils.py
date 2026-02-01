@@ -1,10 +1,8 @@
-import os
-import sys
-import time
 import json
-import numpy as np
-import pandas as pd
+import os
 import pickle
+
+import numpy as np
 from tqdm import tqdm
 
 
@@ -79,7 +77,7 @@ def main():
     stats = calculate_statistics(all_texts)
     print(f"Total tokens: {stats['total']:,}")
     print(f"Average token length: {stats['mean']:.2f} tokens")
-    print(f"\nDistribution statistics:")
+    print("\nDistribution statistics:")
     print(f"Min: {stats['min']}")
     print(f"Max: {stats['max']}")
     print(f"Median: {stats['median']}")

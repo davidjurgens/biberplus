@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 
@@ -7,8 +6,6 @@ sys.path.append("/home/kalkiek/projects/biber-multidimensional-register-analysis
 from experiments.performance.data_utils import load_saved_dataset
 from modeling.neurobiber.tagger import (
     load_model_and_tokenizer,
-    get_predictions,
-    get_predictions_chunked_batch,
     predict_batch,
 )
 

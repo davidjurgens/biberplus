@@ -1,8 +1,7 @@
 import numpy as np
+import torch
 from sklearn.metrics import pairwise_distances
 from tqdm import tqdm
-
-from losses import *
 
 
 def compute_ranking_metrics(

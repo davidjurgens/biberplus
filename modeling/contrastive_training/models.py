@@ -6,18 +6,21 @@ import torch.nn as nn
 from accelerate import Accelerator
 from torch.optim import AdamW
 from tqdm import tqdm
-from transformers import AutoModel, AutoModelForMaskedLM
-from transformers import get_cosine_schedule_with_warmup
+from transformers import (
+    AutoModel,
+    AutoModelForMaskedLM,
+    get_cosine_schedule_with_warmup,
+)
 
 sys.path.append("../..")
 
-from src.hiatus_training.losses import InfoNCE_loss_full
 from src.custom_training.model_utils import (
+    encode_batches,
     load_model,
     setup_accelerator,
-    encode_batches,
 )
 from src.custom_training.trainer_utils import get_dataloaders
+from src.hiatus_training.losses import InfoNCE_loss_full
 
 
 class ContrastiveModel(nn.Module):
@@ -56,7 +59,7 @@ class ContrastiveModel(nn.Module):
         )
 
     def train_model(self):
-        args, device = self.args, self.device
+        args = self.args
         self.init_model()
         self.model.train()
 
@@ -214,7 +217,7 @@ class StyleContrastiveModel(nn.Module):
         )
 
     def train_model(self):
-        args, device = self.args, self.device
+        args = self.args
         self.init_model()
         self.model.train()
 

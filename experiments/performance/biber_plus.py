@@ -1,8 +1,6 @@
-import os
 import sys
 import time
 import json
-import numpy as np
 import pandas as pd
 
 sys.path.append("/home/kalkiek/projects/biber-multidimensional-register-analysis/")
@@ -13,7 +11,6 @@ from biberplus.tagger import (
     load_config,
     load_pipeline,
     calculate_tag_frequencies,
-    tag_text,
 )
 
 

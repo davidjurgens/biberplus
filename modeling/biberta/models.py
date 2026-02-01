@@ -6,12 +6,11 @@ import torch.nn as nn
 from accelerate import Accelerator
 from torch.optim import AdamW
 from tqdm import tqdm
-from transformers import AutoModelForMaskedLM
-from transformers import get_cosine_schedule_with_warmup
+from transformers import AutoModelForMaskedLM, get_cosine_schedule_with_warmup
 
 sys.path.append("../..")
 
-from src.custom_training.model_utils import load_model, calculate_perplexity
+from src.custom_training.model_utils import calculate_perplexity, load_model
 from src.custom_training.trainer_utils import get_dataloaders
 
 
@@ -75,7 +74,7 @@ class StyleMLM(nn.Module):
         )
 
     def train_model(self):
-        args, device = self.args, self.device
+        args = self.args
         self.init_model()
         self.model.train()
 
@@ -253,7 +252,7 @@ class StyleMLMPairs(nn.Module):
         self.adversarial_loss_weight = adversarial_loss_weight
         self.biber_plus_size = biber_plus_size
         self.device = args.device
-        self.train_loader, self.eval_loader = get_dataloaders_style(
+        self.train_loader, self.eval_loader = get_dataloaders(
             args, mlm=True, pairs=True
         )
         self.wandb = wandb
@@ -302,7 +301,7 @@ class StyleMLMPairs(nn.Module):
         )
 
     def train_model(self):
-        args, device = self.args, self.device
+        args = self.args
         self.init_model()
         self.model.train()
 
