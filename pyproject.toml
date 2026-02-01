@@ -63,3 +63,6 @@ Issues = "https://github.com/davidjurgens/biberplus/issues"
 
 [tool.setuptools.package-data]
 biberplus = ["tagger/constants/*.txt", "tagger/config.yaml"]
+
+[tool.setuptools.packages.find]
+include = ["biberplus", "biberplus.*"]
