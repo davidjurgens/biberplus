@@ -2,8 +2,6 @@ import os
 
 import sys
 import numpy as np
-import pandas as pd
-import torch
 import json
 
 from tqdm import tqdm
@@ -14,7 +12,6 @@ sys.path.append("/home/kalkiek/projects/biber-multidimensional-register-analysis
 from modeling.neurobiber.tagger import (
     load_model_and_tokenizer,
     get_predictions,
-    tag_jsonl_file,
 )
 
 # Configuration

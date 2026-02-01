@@ -6,15 +6,14 @@ import torch.nn as nn
 from accelerate import Accelerator
 from torch.optim import AdamW
 from tqdm import tqdm
-from transformers import AutoModelForMaskedLM
-from transformers import get_cosine_schedule_with_warmup
+from transformers import AutoModelForMaskedLM, get_cosine_schedule_with_warmup
 
 sys.path.append("../..")
 
-from src.custom_training.model_utils import load_model, calculate_perplexity
+from src.custom_training.model_utils import calculate_perplexity, load_model
 from src.custom_training.multilingual_finetuning.multilingual_trainer_utils import (
-    load_all_dataloaders,
     alternate_loaders,
+    load_all_dataloaders,
 )
 
 
@@ -88,7 +87,7 @@ class XLMStyleMLM(nn.Module):
         )
 
     def train_model(self):
-        args, device = self.args, self.device
+        args = self.args
         self.init_model()
         self.model.train()
 

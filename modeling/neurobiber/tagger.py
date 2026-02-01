@@ -1,7 +1,4 @@
-import os
-import sys
 import json
-from itertools import islice
 
 import torch
 import numpy as np

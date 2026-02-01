@@ -1,18 +1,16 @@
+import json
+import subprocess
 from typing import Optional, Union
-from transformers import Trainer
-from torch.utils.data import IterableDataset
+
+import numpy as np
+import torch
 from sklearn.metrics import (
-    mean_squared_error,
-    r2_score,
-    mean_absolute_error,
+    f1_score,
     precision_score,
     recall_score,
-    f1_score,
 )
-import json
-import torch
-import numpy as np
-import subprocess
+from torch.utils.data import IterableDataset
+from transformers import Trainer
 
 
 class StreamingDataset(IterableDataset):
@@ -28,7 +26,7 @@ class StreamingDataset(IterableDataset):
             )
             self.total_rows = int(result.stdout.split()[0])
             print(f"Total rows in dataset: {self.total_rows}")
-        except Exception as e:
+        except Exception:
             self.total_rows = sum(1 for _ in open(file_path))
 
         # Read first line to get column names

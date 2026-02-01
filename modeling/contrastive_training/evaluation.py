@@ -21,7 +21,7 @@ def compute_ranking_metrics(
             sorted_target_authors = target_authors[sorted_indices]
             ranks[i] = np.where(sorted_target_authors == query_authors[i])[0].item()
             reciprocal_ranks[i] = 1.0 / float(ranks[i] + 1)
-        except:
+        except Exception:
             errors.append(i)
     ranks[errors] = -100
     reciprocal_ranks[errors] = -100

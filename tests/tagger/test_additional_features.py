@@ -1,7 +1,6 @@
 import unittest
 
 import spacy
-
 from biberplus.tagger import tag_text
 
 
@@ -76,7 +75,18 @@ class TestAdditionalFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn("UH", tagged_words[0]["tags"])
 
-    def test_interjections_end(self):
+    def test_interjections_middle(self):
+        text = "I mean gosh, are you really sure about that?"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        print(tagged_words)
+        self.assertIn("UH", tagged_words[2]["tags"])
+
+    def test_interjections_end1(self):
+        text = "That's a bad idea, gosh"
+        tagged_words = tag_text(text, pipeline=self.pipeline)
+        self.assertIn("UH", tagged_words[-1]["tags"])
+
+    def test_interjections_end2(self):
         text = "That's a great idea, right?"
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn("UH", tagged_words[-2]["tags"])
@@ -91,17 +101,6 @@ class TestAdditionalFunctions(unittest.TestCase):
         text = "His joke was so funny, LOL!"
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn("LAUGH", tagged_words[-2]["tags"])
-
-    def test_interjections_middle(self):
-        text = "I mean gosh, are you really sure about that?"
-        tagged_words = tag_text(text, pipeline=self.pipeline)
-        print(tagged_words)
-        self.assertIn("UH", tagged_words[2]["tags"])
-
-    def test_interjections_end(self):
-        text = "That's a bad idea, gosh"
-        tagged_words = tag_text(text, pipeline=self.pipeline)
-        self.assertIn("UH", tagged_words[-1]["tags"])
 
     def test_possessive_pronoun(self):
         text = "That car is hers, not mine."

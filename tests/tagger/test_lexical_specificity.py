@@ -1,10 +1,12 @@
 import unittest
-from unittest.mock import patch
-import spacy
-import pandas as pd
 
-from biberplus.tagger.tag_frequencies import *
-from biberplus.tagger.biber_plus_tagger import BiberPlusTagger
+import pandas as pd
+import spacy
+from biberplus.tagger.tag_frequencies import (
+    calculate_mean_word_length,
+    calculate_total_adverbs,
+    calculate_type_token_ratio,
+)
 
 
 class TestLexicalSpecificityFunctions(unittest.TestCase):

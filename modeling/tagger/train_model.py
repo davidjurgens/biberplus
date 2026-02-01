@@ -1,25 +1,24 @@
+import logging
 import os
 import sys
-import pandas as pd
-import numpy as np
-from transformers import (
-    AutoTokenizer,
-    AutoModelForSequenceClassification,
-    TrainingArguments,
-    Trainer,
-    EarlyStoppingCallback,
-)
 
+import numpy as np
+import pandas as pd
 import wandb
-import logging
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    EarlyStoppingCallback,
+    TrainingArguments,
+)
 
 sys.path.append("../..")
 
 from modeling.tagger.train_utils import (
+    EvalSamplingTrainer,
     StreamingDataset,
     compute_metrics,
     compute_tag_level_metrics,
-    EvalSamplingTrainer,
 )
 
 # Path Configuration
@@ -54,7 +53,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-logger.info(f"Starting training run with configuration:")
+logger.info("Starting training run with configuration:")
 logger.info(f"Model: {MODEL_NAME}")
 logger.info(f"Run name: {RUN_NAME}")
 logger.info(f"Output directory: {OUTPUT_DIR}")

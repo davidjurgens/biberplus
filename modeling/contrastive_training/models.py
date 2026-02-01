@@ -14,11 +14,7 @@ from transformers import (
 
 sys.path.append("../..")
 
-from src.custom_training.model_utils import (
-    encode_batches,
-    load_model,
-    setup_accelerator,
-)
+from src.custom_training.model_utils import load_model
 from src.custom_training.trainer_utils import get_dataloaders
 from src.hiatus_training.losses import InfoNCE_loss_full
 
