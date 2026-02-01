@@ -8,7 +8,7 @@ version = "0.3.0"
 description = "A pure Python implementation of Biber's (1988) Variation across Speech and Writing linguistic tags with additional features"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 authors = [
     { name = "Kenan Alkiek", email = "kalkiek@umich.edu" },
     { name = "David Jurgens" },
