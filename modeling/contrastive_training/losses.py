@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 def InfoNCE_loss_full(z1, z2, temperature=0.05):
-    """ InfoNCE loss function """
+    """InfoNCE loss function"""
     loss_fn = nn.CrossEntropyLoss()
     sim = cosine_similarity(z1.unsqueeze(1), z2.unsqueeze(0), temperature)
     batch_size = sim.size(0)

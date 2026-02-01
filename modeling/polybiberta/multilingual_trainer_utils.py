@@ -4,17 +4,22 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-sys.path.append('../')
+sys.path.append("../")
 
-from src.custom_training.multilingual_finetuning.collators import MLMTextBiberCollator, MLMTextCollator
+from src.custom_training.multilingual_finetuning.collators import (
+    MLMTextBiberCollator,
+    MLMTextCollator,
+)
 
 
 def alternate_loaders(multilingual_dataloader, english_dataloader):
     # Initialize the iterators for both dataloaders
     multilingual_dataloader_iter = iter(multilingual_dataloader)
     english_dataloader_iter = iter(english_dataloader)
-    print(f"Loading alternate data loaders. Multilingual batches: {len(multilingual_dataloader)} \t English batches: "
-          f"{len(english_dataloader)}")
+    print(
+        f"Loading alternate data loaders. Multilingual batches: {len(multilingual_dataloader)} \t English batches: "
+        f"{len(english_dataloader)}"
+    )
     assert len(multilingual_dataloader) > len(english_dataloader)
 
     total_steps = len(multilingual_dataloader) + len(english_dataloader)
@@ -22,11 +27,15 @@ def alternate_loaders(multilingual_dataloader, english_dataloader):
 
     for i in range(total_steps):
         if (i + 1) % alternate_index == 0:
-            batch, english_dataloader_iter = get_next_batch(english_dataloader, english_dataloader_iter)
-            yield batch, 'english'
+            batch, english_dataloader_iter = get_next_batch(
+                english_dataloader, english_dataloader_iter
+            )
+            yield batch, "english"
         else:
-            batch, multilingual_dataloader_iter = get_next_batch(multilingual_dataloader, multilingual_dataloader_iter)
-            yield batch, 'multilingual'
+            batch, multilingual_dataloader_iter = get_next_batch(
+                multilingual_dataloader, multilingual_dataloader_iter
+            )
+            yield batch, "multilingual"
 
 
 def get_next_batch(dataloader, iterator):
@@ -40,7 +49,9 @@ def get_next_batch(dataloader, iterator):
 
 
 def load_all_dataloaders(args):
-    tokenizer = load_tokenizer(args.tokenizer if args.tokenizer else args.pretrained_model)
+    tokenizer = load_tokenizer(
+        args.tokenizer if args.tokenizer else args.pretrained_model
+    )
 
     collator = MLMTextCollator(tokenizer=tokenizer, max_length=args.max_length)
     en_collator = MLMTextBiberCollator(tokenizer=tokenizer, max_length=args.max_length)
@@ -53,16 +64,29 @@ def load_all_dataloaders(args):
 
 def get_dataloaders(args, collator, is_english=False):
     print(
-        f"Loading in the {'English' if is_english else 'multilingual'} training data from {args.en_train_file if is_english else args.train_file}")
-    train = load_dataset("json", data_files=args.en_train_file if is_english else args.train_file, split="train")
-    dev = load_dataset("json", data_files=args.en_dev_file if is_english else args.dev_file, split="train")
+        f"Loading in the {'English' if is_english else 'multilingual'} training data from {args.en_train_file if is_english else args.train_file}"
+    )
+    train = load_dataset(
+        "json",
+        data_files=args.en_train_file if is_english else args.train_file,
+        split="train",
+    )
+    dev = load_dataset(
+        "json",
+        data_files=args.en_dev_file if is_english else args.dev_file,
+        split="train",
+    )
     if args.num_training_samples > 1:
         train = train.select(range(args.num_training_samples))
     if args.num_eval_samples > 1:
         dev = dev.select(range(args.num_eval_samples))
 
-    train_loader = DataLoader(train, batch_size=args.batch_size, shuffle=True, collate_fn=collator)
-    dev_loader = DataLoader(dev, batch_size=args.batch_size, shuffle=True, collate_fn=collator)
+    train_loader = DataLoader(
+        train, batch_size=args.batch_size, shuffle=True, collate_fn=collator
+    )
+    dev_loader = DataLoader(
+        dev, batch_size=args.batch_size, shuffle=True, collate_fn=collator
+    )
 
     return train_loader, dev_loader
 

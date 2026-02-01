@@ -15,7 +15,7 @@ class MLMBiberCollator(DataCollatorForLanguageModeling):
         text_sents = self._encode_text(features, "text")
         batch = self._prepare_batch(text_sents)
 
-        encodings = [feature['text_biberPlus'] for feature in features]
+        encodings = [feature["text_biberPlus"] for feature in features]
 
         # If special token mask has been preprocessed, pop it from the dict.
         special_tokens_mask = batch.pop("special_tokens_mask", None)
@@ -27,8 +27,14 @@ class MLMBiberCollator(DataCollatorForLanguageModeling):
         return batch, encodings
 
     def _encode_text(self, features, feature_name):
-        return [{'input_ids': self.tokenizer(feature[feature_name])['input_ids'][:self.max_length]} for feature in
-                features]
+        return [
+            {
+                "input_ids": self.tokenizer(feature[feature_name])["input_ids"][
+                    : self.max_length
+                ]
+            }
+            for feature in features
+        ]
 
     def _prepare_batch(self, sents):
         return self.tokenizer.pad(
@@ -54,8 +60,8 @@ class MLMBiberPairCollator(DataCollatorForLanguageModeling):
         query_batch = self._prepare_batch(query_sents)
         candidate_batch = self._prepare_batch(candidate_sents)
 
-        query_encodings = [feature['query_biberPlus'] for feature in features]
-        candidate_encodings = [feature['candidate_biberPlus'] for feature in features]
+        query_encodings = [feature["query_biberPlus"] for feature in features]
+        candidate_encodings = [feature["candidate_biberPlus"] for feature in features]
 
         # If special token mask has been preprocessed, pop it from the dict.
         special_tokens_mask = query_batch.pop("special_tokens_mask", None)
@@ -65,21 +71,36 @@ class MLMBiberPairCollator(DataCollatorForLanguageModeling):
             query_batch["input_ids"], special_tokens_mask=special_tokens_mask
         )
 
-        candidate_batch["input_ids"], candidate_batch["labels"] = self.torch_mask_tokens(
-            candidate_batch["input_ids"], special_tokens_mask=special_tokens_mask
+        candidate_batch["input_ids"], candidate_batch["labels"] = (
+            self.torch_mask_tokens(
+                candidate_batch["input_ids"], special_tokens_mask=special_tokens_mask
+            )
         )
 
         if self.evaluate:
-            query_authors = [feature['query_authorID'] for feature in features]
-            target_authors = [feature['candidate_authorID'] for feature in features]
+            query_authors = [feature["query_authorID"] for feature in features]
+            target_authors = [feature["candidate_authorID"] for feature in features]
 
-            return query_batch, candidate_batch, query_encodings, candidate_encodings, query_authors, target_authors
+            return (
+                query_batch,
+                candidate_batch,
+                query_encodings,
+                candidate_encodings,
+                query_authors,
+                target_authors,
+            )
         else:
             return query_batch, candidate_batch, query_encodings, candidate_encodings
 
     def _encode_text(self, features, feature_name):
-        return [{'input_ids': self.tokenizer(feature[feature_name])['input_ids'][:self.max_length]} for feature in
-                features]
+        return [
+            {
+                "input_ids": self.tokenizer(feature[feature_name])["input_ids"][
+                    : self.max_length
+                ]
+            }
+            for feature in features
+        ]
 
     def _prepare_batch(self, sents):
         return self.tokenizer.pad(

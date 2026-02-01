@@ -6,14 +6,14 @@ import yaml
 
 
 def load_config():
-    config_fp = Path(os.path.dirname(__file__)) / 'config.yaml'
+    config_fp = Path(os.path.dirname(__file__)) / "config.yaml"
     with open(config_fp) as f:
         return yaml.safe_load(f)
 
 
 def build_variable_dictionaries():
     script_dir = Path(os.path.dirname(__file__))
-    constant_files = script_dir.glob('constants/*.txt')
+    constant_files = script_dir.glob("constants/*.txt")
     variables_dict = {}
 
     for constant_file in constant_files:
@@ -26,7 +26,7 @@ def build_variable_dictionaries():
 
 def read_in_variables(txt_file):
     variables = []
-    with open(txt_file, 'r') as f:
+    with open(txt_file, "r") as f:
         for line in f:
             var = line.strip()
             if var:
@@ -35,14 +35,18 @@ def read_in_variables(txt_file):
 
 
 def load_pipeline(config):
-    if config['use_gpu']:
+    if config["use_gpu"]:
         spacy.require_gpu()
 
-    return spacy.load("en_core_web_sm", disable=['parser', 'lemmatizer', 'ner', 'textcat'])
+    return spacy.load(
+        "en_core_web_sm", disable=["parser", "lemmatizer", "ner", "textcat"]
+    )
 
 
 def load_tokenizer(use_gpu=False):
     if use_gpu:
         spacy.require_gpu()
 
-    return spacy.load("en_core_web_sm", disable=['tagger', 'parser', 'lemmatizer', 'ner', 'textcat'])
+    return spacy.load(
+        "en_core_web_sm", disable=["tagger", "parser", "lemmatizer", "ner", "textcat"]
+    )

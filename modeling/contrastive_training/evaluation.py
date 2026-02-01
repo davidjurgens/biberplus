@@ -1,11 +1,12 @@
 import numpy as np
+import torch
 from sklearn.metrics import pairwise_distances
 from tqdm import tqdm
 
-from losses import *
 
-
-def compute_ranking_metrics(queries, targets, query_authors, target_authors, metric='cosine'):
+def compute_ranking_metrics(
+    queries, targets, query_authors, target_authors, metric="cosine"
+):
     num_queries = len(query_authors)
     print("Computing ranking metrics for {} queries".format(num_queries))
     ranks = np.zeros((num_queries), dtype=np.float32)
@@ -20,7 +21,7 @@ def compute_ranking_metrics(queries, targets, query_authors, target_authors, met
             sorted_target_authors = target_authors[sorted_indices]
             ranks[i] = np.where(sorted_target_authors == query_authors[i])[0].item()
             reciprocal_ranks[i] = 1.0 / float(ranks[i] + 1)
-        except:
+        except Exception:
             errors.append(i)
     ranks[errors] = -100
     reciprocal_ranks[errors] = -100
@@ -28,11 +29,11 @@ def compute_ranking_metrics(queries, targets, query_authors, target_authors, met
     reciprocal_ranks = reciprocal_ranks[reciprocal_ranks != -100]
 
     return_dict = {
-        'MRR': np.mean(reciprocal_ranks),
-        'R@8': np.sum(np.less_equal(ranks + 1, 8)) / np.float32(num_queries),
-        'R@50': np.sum(np.less_equal(ranks + 1, 50)) / np.float32(num_queries),
-        'R@100': np.sum(np.less_equal(ranks + 1, 100)) / np.float32(num_queries),
-        'R@1000': np.sum(np.less_equal(ranks + 1, 1000)) / np.float32(num_queries)
+        "MRR": np.mean(reciprocal_ranks),
+        "R@8": np.sum(np.less_equal(ranks + 1, 8)) / np.float32(num_queries),
+        "R@50": np.sum(np.less_equal(ranks + 1, 50)) / np.float32(num_queries),
+        "R@100": np.sum(np.less_equal(ranks + 1, 100)) / np.float32(num_queries),
+        "R@1000": np.sum(np.less_equal(ranks + 1, 1000)) / np.float32(num_queries),
     }
 
     return return_dict
@@ -43,7 +44,7 @@ def evaluate(model, dataloader, args):
 
     model.eval()
     model.to(device)
-    print('Evaluating...')
+    print("Evaluating...")
     queries, targets = [], []
     all_query_authors, all_target_authors = [], []
 
@@ -62,4 +63,6 @@ def evaluate(model, dataloader, args):
     queries = np.concatenate(queries, axis=0)
     targets = np.concatenate(targets, axis=0)
 
-    return compute_ranking_metrics(queries, targets, all_query_authors, all_target_authors, args.metric)
+    return compute_ranking_metrics(
+        queries, targets, all_query_authors, all_target_authors, args.metric
+    )

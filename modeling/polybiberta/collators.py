@@ -25,8 +25,14 @@ class MLMTextCollator(DataCollatorForLanguageModeling):
         return batch
 
     def _encode_text(self, features, feature_name):
-        return [{'input_ids': self.tokenizer(feature[feature_name])['input_ids'][:self.max_length]} for feature in
-                features]
+        return [
+            {
+                "input_ids": self.tokenizer(feature[feature_name])["input_ids"][
+                    : self.max_length
+                ]
+            }
+            for feature in features
+        ]
 
     def _prepare_batch(self, sents):
         return self.tokenizer.pad(
@@ -48,7 +54,7 @@ class MLMTextBiberCollator(DataCollatorForLanguageModeling):
         text_sents = self._encode_text(features, "text")
         batch = self._prepare_batch(text_sents)
 
-        encodings = [feature['text_biberPlus'] for feature in features]
+        encodings = [feature["text_biberPlus"] for feature in features]
 
         # If special token mask has been preprocessed, pop it from the dict.
         special_tokens_mask = batch.pop("special_tokens_mask", None)
@@ -60,8 +66,14 @@ class MLMTextBiberCollator(DataCollatorForLanguageModeling):
         return batch, encodings
 
     def _encode_text(self, features, feature_name):
-        return [{'input_ids': self.tokenizer(feature[feature_name])['input_ids'][:self.max_length]} for feature in
-                features]
+        return [
+            {
+                "input_ids": self.tokenizer(feature[feature_name])["input_ids"][
+                    : self.max_length
+                ]
+            }
+            for feature in features
+        ]
 
     def _prepare_batch(self, sents):
         return self.tokenizer.pad(
