@@ -32,8 +32,6 @@ dependencies = [
     "numpy",
     "spacy>=3.0.0",
     "tqdm",
-    "blis",
-    "confection",
     "PyYAML",
     "factor_analyzer",
     "matplotlib",
@@ -43,6 +41,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/davidjurgens/biberplus"
 Repository = "https://github.com/davidjurgens/biberplus"
+Issues = "https://github.com/davidjurgens/biberplus/issues"
 
 [tool.setuptools.package-data]
 "*" = ["tagger/constants/*.txt", "tagger/config.yaml"]
