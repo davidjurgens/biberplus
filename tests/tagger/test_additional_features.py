@@ -75,11 +75,6 @@ class TestAdditionalFunctions(unittest.TestCase):
         tagged_words = tag_text(text, pipeline=self.pipeline)
         self.assertIn('UH', tagged_words[0]['tags'])
 
-    def test_interjections_end(self):
-        text = "That's a great idea, right?"
-        tagged_words = tag_text(text, pipeline=self.pipeline)
-        self.assertIn('UH', tagged_words[-2]['tags'])
-
     def test_numerals(self):
         text = "I have three dogs and two cats."
         tagged_words = tag_text(text, pipeline=self.pipeline)

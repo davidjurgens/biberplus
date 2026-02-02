@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=77.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biberplus"
+version = "0.3.0"
+description = "A pure Python implementation of Biber's (1988) Variation across Speech and Writing linguistic tags with additional features"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Kenan Alkiek", email = "kalkiek@umich.edu" },
+    { name = "David Jurgens" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+keywords = [
+    "nlp",
+    "linguistics",
+    "biber",
+    "register",
+    "corpus",
+    "text-analysis",
+    "spacy",
+    "variation",
+]
+dependencies = [
+    "pandas",
+    "numpy",
+    "spacy>=3.0.0",
+    "tqdm",
+    "PyYAML",
+    "factor_analyzer",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.14.0",
+    "flake8>=7.0",
+]
+plots = [
+    "matplotlib",
+    "seaborn",
+]
+
+[project.urls]
+Homepage = "https://github.com/davidjurgens/biberplus"
+Repository = "https://github.com/davidjurgens/biberplus"
+Issues = "https://github.com/davidjurgens/biberplus/issues"
+
+[tool.setuptools.package-data]
+biberplus = ["tagger/constants/*.txt", "tagger/config.yaml"]
+
+[tool.setuptools.packages.find]
+include = ["biberplus", "biberplus.*"]
