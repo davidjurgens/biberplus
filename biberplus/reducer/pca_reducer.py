@@ -1,9 +1,24 @@
-import matplotlib.pyplot as plt
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 from sklearn.decomposition import PCA
+
+try:
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    _HAS_PLOTTING = True
+except ImportError:
+    _HAS_PLOTTING = False
+
+
+def _require_plotting():
+    if not _HAS_PLOTTING:
+        raise ImportError(
+            "Plotting requires matplotlib and seaborn. "
+            "Install with: pip install biberplus[plots]"
+        )
 
 
 def tags_pca(frequencies_df, components=2, name=None):
@@ -20,6 +35,7 @@ def tags_pca(frequencies_df, components=2, name=None):
 
 
 def plot_pca_2d(df):
+    _require_plotting()
     sns.set()
     sns.lmplot(
         x='PC1',
@@ -34,6 +50,7 @@ def plot_pca_2d(df):
 
 
 def visualize_explained_variance(explained_variance):
+    _require_plotting()
     plt.bar(
         range(1, len(explained_variance) + 1),
         explained_variance
@@ -46,6 +63,7 @@ def visualize_explained_variance(explained_variance):
 
 
 def plot_explained_variance(pca):
+    _require_plotting()
     n_components = pca.n_components_
     plt.figure(figsize=(10, 5))
     plt.bar(range(n_components), pca.explained_variance_, align='center')
@@ -57,6 +75,7 @@ def plot_explained_variance(pca):
 
 
 def plot_cumulative_explained_variance(pca):
+    _require_plotting()
     n_components = pca.n_components_
     explained_variance_ratio_cumsum = np.cumsum(pca.explained_variance_ratio_)
     plt.figure(figsize=(10, 5))

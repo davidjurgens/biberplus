@@ -973,7 +973,7 @@ class BiberPlusTagger:
 
     def tag_emoticon(self, word, previous_words, next_words):
         if self.helper.is_punctuation(word):
-            emoticon_pattern = re.compile('[:;=](?:-)?[)DPp\/]')
+            emoticon_pattern = re.compile('[:;=](?:-)?[)DPp/]')
             if re.search(emoticon_pattern, word['text']):
                 return 'EMOT'
 
@@ -1031,7 +1031,7 @@ class BiberPlusTagger:
             return "SBJP"
 
     def tag_url(self, word, previous_words, next_words):
-        url_pattern = "(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
+        url_pattern = r"(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
         if re.search(url_pattern, word['text']):
             return "URL"
 
