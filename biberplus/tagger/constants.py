@@ -103,8 +103,10 @@ DOC_TAGS = [
     'RB'
 ]
 
-# Keep track of all the acronyms in one spot
+# Human-readable names for a subset of tags. NOTE: intentionally incomplete -
+# only a few acronyms are mapped today. Programmatic feature labels (tag code per
+# vector position) come from biberplus.reducer.encode_text instead.
 MDA_ACRONYMS = {
-    'XXO': 'Analytic Negation',
+    'XX0': 'Analytic Negation',
     'SYNE': 'Synthetic Negation'
 }
