@@ -1,3 +1,4 @@
+import logging
 import warnings
 import functools
 import operator
@@ -14,6 +15,8 @@ from biberplus.tagger.tagger_utils import load_config, load_pipeline, build_vari
 
 warnings.filterwarnings('ignore', category=FutureWarning, message='.*swapaxes.*')
 
+logger = logging.getLogger(__name__)
+
 
 def calculate_tag_frequencies(text, pipeline=None, config=None):
     config = config or load_config()
@@ -27,9 +30,11 @@ def calculate_tag_frequencies(text, pipeline=None, config=None):
         tag_frequencies = count_tags_every_n_tokens(tagged_dataframe, tag_frequencies, tags, config)
 
         return calculate_descriptive_stats(tag_frequencies)
-    except Exception as e:
-        print(text)
-        print(e)
+    except Exception:
+        # Surface the root cause instead of silently returning None. Callers that
+        # tag large corpora already wrap this in their own try/except.
+        logger.exception("Failed to calculate tag frequencies for text: %.200r", text)
+        raise
 
 def calculate_descriptive_stats(tag_counts):
     rows = []
@@ -51,7 +56,14 @@ def calculate_descriptive_stats(tag_counts):
 def count_tags_every_n_tokens(tagged_df, tag_counts, tags, config):
     num_batches = ceil(len(tagged_df) / config['token_normalization'])
 
-    for index, batch in enumerate(np.array_split(tagged_df, num_batches)):
+    # Split by integer index rather than np.array_split(DataFrame, ...): newer
+    # pandas (>=3.0) no longer returns DataFrame chunks from np.array_split,
+    # which broke attribute access on the batch. Splitting the index preserves
+    # the original (roughly equal) batch sizes across pandas versions.
+    index_batches = np.array_split(np.arange(len(tagged_df)), num_batches)
+
+    for index, idx in enumerate(index_batches):
+        batch = tagged_df.iloc[idx]
         last_batch = index == num_batches - 1
         # Ignore the last batch if it's too small, otherwise scale up tag frequencies
         if last_batch and len(batch) <= config['drop_last_batch_pct'] * config['token_normalization']:
@@ -71,13 +83,17 @@ def update_tag_counts(tagged_df, tag_counts, tags, tag_binary, weight=1.):
         count = round(curr_counts[tag] * weight) if tag in curr_counts else 0
         tag_counts[tag].append(count)
 
-        if tag_binary and tag in BIBER_PLUS_TAGS:
-            tag_name = 'BIN_' + tag if tag[:4] != 'BIN_' else tag
-            tag_counts[tag_name].append(int(tag in curr_counts))
+    # Binary presence indicators are produced in a single dedicated pass over
+    # BIBER_PLUS_TAGS. Driving this off BIBER_PLUS_TAGS (rather than the `tags`
+    # list, which may also contain BIN_ entries) ensures each window contributes
+    # exactly one indicator per tag - the previous interleaved approach appended
+    # a second, spurious 0 per window, which halved the mean and inflated std.
+    if tag_binary:
+        for tag in BIBER_PLUS_TAGS:
+            tag_counts['BIN_' + tag].append(int(tag in curr_counts))
 
     # Update document level tags
     tag_counts['AWL'].append(calculate_mean_word_length(tagged_df))
-    # tag_counts['RB'].append(calculate_total_adverbs(tagged_df))
     tag_counts['TTR'].append(calculate_type_token_ratio(tagged_df))
 
     return tag_counts
@@ -104,9 +120,9 @@ def load_tags(config):
     tags = []
     if config['biber']:
         tags.extend(BIBER_PLUS_TAGS)
-    if config['binary_tags']:
-        binary_tags = ['BIN_' + tag for tag in BIBER_PLUS_TAGS]
-        tags.extend(binary_tags)
+    # Note: BIN_ tags are intentionally NOT added here. They are generated in a
+    # dedicated pass in update_tag_counts; listing them here previously caused
+    # each binary tag to be counted twice per window.
 
     if config['function_words']:
         fw = config['function_words_list'] if config['function_words_list'] else build_variable_dictionaries()[
