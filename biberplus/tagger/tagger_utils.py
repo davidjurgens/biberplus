@@ -1,16 +1,26 @@
+import copy
 import os
+from functools import lru_cache
 from pathlib import Path
 
 import spacy
 import yaml
 
 
-def load_config():
+@lru_cache(maxsize=1)
+def _load_config_cached():
     config_fp = Path(os.path.dirname(__file__)) / 'config.yaml'
     with open(config_fp) as f:
         return yaml.safe_load(f)
 
 
+def load_config():
+    # Return a deep copy so callers can freely mutate (e.g. config.update(...))
+    # without corrupting the cached parse shared across calls.
+    return copy.deepcopy(_load_config_cached())
+
+
+@lru_cache(maxsize=1)
 def build_variable_dictionaries():
     script_dir = Path(os.path.dirname(__file__))
     constant_files = script_dir.glob('constants/*.txt')
@@ -26,7 +36,9 @@ def build_variable_dictionaries():
 
 def read_in_variables(txt_file):
     variables = []
-    with open(txt_file, 'r') as f:
+    # Explicit UTF-8 so lexicon files load identically on Windows (whose default
+    # encoding is cp1252) as on Linux/macOS.
+    with open(txt_file, 'r', encoding='utf-8') as f:
         for line in f:
             var = line.strip()
             if var:
