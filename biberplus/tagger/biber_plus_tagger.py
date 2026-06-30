@@ -1,10 +1,19 @@
-import inspect
 import re
 
 import numpy as np
 
 from biberplus.tagger.biber_run_order import RUN_ORDER
 from biberplus.tagger.tag_helper import TagHelper
+
+# Compiled once at import time; these are evaluated per token in run_all().
+EMOJI_PATTERN = re.compile('[\U00010000-\U0010ffff]', flags=re.UNICODE)
+EMOTICON_PATTERN = re.compile('[:;=](?:-)?[)DPp/]')
+URL_PATTERN = re.compile(
+    r"(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}"
+    r"|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}"
+    r"|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}"
+    r"|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
+)
 
 
 class BiberPlusTagger:
@@ -30,22 +39,24 @@ class BiberPlusTagger:
 
         self.ttr = -1.0
 
+    @classmethod
+    def _ordered_tag_method_names(cls):
+        """Tag method names sorted by RUN_ORDER, computed once per class.
+
+        The RUN_ORDER completeness invariant (every tag_* method is listed) is
+        asserted in tests/test_end_to_end.py rather than on this hot path.
+        """
+        cached = cls.__dict__.get('_TAG_METHOD_NAMES')
+        if cached is None:
+            tag_methods = [name for name in dir(cls)
+                           if name.startswith('tag') and callable(getattr(cls, name))]
+            cached = sorted(tag_methods, key=RUN_ORDER.index)
+            cls._TAG_METHOD_NAMES = cached
+        return cached
+
     def run_all(self):
         """Run all tagger functions defined in this class."""
-
-        def get_tagging_methods():
-            """Get all methods that start with 'tag' and sort them by RUN_ORDER."""
-            attrs = (getattr(self, name) for name in dir(self))
-            methods = filter(inspect.ismethod, attrs)
-            tag_methods = [m for m in methods if m.__name__.startswith('tag')]
-            missing_methods = set([method.__name__ for method in tag_methods]) - set(RUN_ORDER)
-
-            if missing_methods:
-                raise ValueError(f"Missing methods in RUN_ORDER: {', '.join(missing_methods)}")
-
-            return sorted(tag_methods, key=lambda x: RUN_ORDER.index(x.__name__))
-
-        tag_methods = get_tagging_methods()
+        tag_methods = [getattr(self, name) for name in self._ordered_tag_method_names()]
 
         for index, tagged_word in enumerate(self.tagged_words):
             # Get the context surrounding the word. Sets to None if unavailable
@@ -967,14 +978,12 @@ class BiberPlusTagger:
             return 'DET'
 
     def tag_emoji(self, word, previous_words, next_words):
-        emoji_pattern = re.compile('[\U00010000-\U0010ffff]', flags=re.UNICODE)
-        if re.search(emoji_pattern, word['text']):
+        if EMOJI_PATTERN.search(word['text']):
             return 'EMOJ'
 
     def tag_emoticon(self, word, previous_words, next_words):
         if self.helper.is_punctuation(word):
-            emoticon_pattern = re.compile('[:;=](?:-)?[)DPp/]')
-            if re.search(emoticon_pattern, word['text']):
+            if EMOTICON_PATTERN.search(word['text']):
                 return 'EMOT'
 
     def tag_exclamation_mark(self, word, previous_words, next_words):
@@ -1031,8 +1040,7 @@ class BiberPlusTagger:
             return "SBJP"
 
     def tag_url(self, word, previous_words, next_words):
-        url_pattern = r"(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
-        if re.search(url_pattern, word['text']):
+        if URL_PATTERN.search(word['text']):
             return "URL"
 
     def tag_wh_word(self, word, previous_words, next_words):
