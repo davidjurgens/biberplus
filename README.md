@@ -14,9 +14,11 @@ Biberplus is a pure Python implementation of the linguistic tagging system intro
   - [Optional extras](#optional-extras)
 - [Quickstart Guide](#quickstart-guide)
   - [Biber Tagger](#1-biber-tagger)
-  - [Function Words Tagger](#2-function-words-tagger)
-  - [Text Embeddings](#3-text-embeddings)
-  - [Dimension Reduction](#4-dimension-reduction)
+  - [Tagging a Corpus](#2-tagging-a-corpus)
+  - [Function Words Tagger](#3-function-words-tagger)
+  - [Word-Level Tagging](#4-word-level-tagging)
+  - [Text Embeddings](#5-text-embeddings)
+  - [Dimension Reduction](#6-dimension-reduction)
 - [Configuration](#configuration)
 - [Usage Tips](#usage-tips)
 - [Troubleshooting](#troubleshooting)
@@ -88,18 +90,70 @@ frequencies_df = calculate_tag_frequencies("Your sample text goes here")
 print(frequencies_df)
 ```
 
-**Tag a large corpus with GPU and multi-processing:**
+**Understanding the frequencies output**
+
+`calculate_tag_frequencies` slices the text into windows of `token_normalization`
+tokens (default 100), counts each tag per window, and then reports descriptive
+statistics across those windows. The returned DataFrame has one row per tag with
+these columns:
+
+| column    | meaning                                                        |
+|-----------|----------------------------------------------------------------|
+| `tag`     | the feature name (e.g. `NN`, `PASS`, `BIN_PASS`, `AWL`, `TTR`) |
+| `mean`    | average per-window count (per `token_normalization` tokens)    |
+| `min_val` | smallest per-window count                                      |
+| `max_val` | largest per-window count                                       |
+| `range`   | `max_val - min_val`                                            |
+| `std`     | standard deviation across windows                              |
+
+Special rows: `AWL` is the average word length and `TTR` is the type-token ratio
+(over the first 400 tokens). When `binary_tags` is enabled, each Biber tag also
+gets a `BIN_<tag>` row whose `mean` is the **fraction of windows** in which the
+feature appeared at least once (so `std` equals `sqrt(mean * (1 - mean))`).
+
+### 2. Tagging a Corpus
+
+When tagging many documents, build the config and spaCy pipeline **once** and
+reuse them in a loop. Reloading the pipeline per document is the most common
+performance pitfall.
+
+```python
+from biberplus.tagger import load_config, load_pipeline, calculate_tag_frequencies
+
+corpus = ["First document ...", "Second document ...", "Third document ..."]
+
+config = load_config()
+config.update({'function_words': False})
+pipeline = load_pipeline(config)  # load the model only once
+
+per_doc_frequencies = [
+    calculate_tag_frequencies(text, pipeline, config) for text in corpus
+]
+```
+
+**Parallel tagging of a single large document (GPU / multi-processing):**
+
 ```python
 from biberplus.tagger import load_config, load_pipeline, calculate_tag_frequencies
 
 config = load_config()
 config.update({'use_gpu': True, 'n_processes': 4, 'function_words': False})
 pipeline = load_pipeline(config)
-frequencies_df = calculate_tag_frequencies("Your sample text goes here", pipeline, config)
+frequencies_df = calculate_tag_frequencies("Your very long text ...", pipeline, config)
 print(frequencies_df)
 ```
 
-### 2. Function Words Tagger
+> **Windows / macOS note:** these platforms start worker processes with the
+> `spawn` method, which re-imports your script. Wrap the entry point in a
+> `if __name__ == "__main__":` guard so multi-processing does not re-execute your
+> top-level code in every worker:
+>
+> ```python
+> if __name__ == "__main__":
+>     main()
+> ```
+
+### 3. Function Words Tagger
 
 **Using the default list:**
 ```python
@@ -120,14 +174,13 @@ config = load_config()
 config.update({
     'function_words': True,
     'biber': False,
-    'grieve_clarke': False,
     'function_words_list': custom_fw
 })
-frequencies_df = calculate_tag_frequencies("Your sample text goes here", custom_fw)
+frequencies_df = calculate_tag_frequencies("Your sample text goes here", config=config)
 print(frequencies_df)
 ```
 
-### 3. Word-Level Tagging
+### 4. Word-Level Tagging
 
 See exactly which tags are applied to each word:
 ```python
@@ -158,19 +211,56 @@ Word: seem            Tags: SMP, INF
 Word: likely          Tags: JJ
 ```
 
-### 4. Text Embeddings
+### 5. Text Embeddings
 
-Generate an embedding vector from the textual data:
+Generate an embedding from the textual data. The result is grouped by feature
+type (`biber`, and optionally `binary` and `function_words`), and each group
+carries both the `values` vector and the aligned feature `names`, so you always
+know which feature each number corresponds to:
+
 ```python
 from biberplus.tagger import load_config
 from biberplus.reducer import encode_text
 
 config = load_config()
-embedding = encode_text(config, "Your sample text goes here")
-print(embedding)
+config.update({'binary_tags': True, 'function_words': True})
+encoding = encode_text(config, "Your sample text goes here")
+
+# The 'biber' group uses all five statistics per tag.
+biber = encoding['biber']
+print(biber['values'][:5])  # e.g. [0.0, 0.0, 0.0, 0.0, 0.0]
+print(biber['names'][:5])   # e.g. ['QUAN_mean', 'QUAN_min_val', 'QUAN_max_val', 'QUAN_range', 'QUAN_std']
+
+# The 'binary' group only carries mean/std per tag (presence indicators).
+binary = encoding['binary']
+print(binary['names'][:4])  # e.g. ['BIN_QUAN_mean', 'BIN_QUAN_std', 'BIN_QUPR_mean', 'BIN_QUPR_std']
+
+# The 'function_words' group has one block per function word.
+function_words = encoding['function_words']
+print(function_words['names'][:5])
+
+# Names and values are positionally aligned within every group:
+named_features = dict(zip(biber['names'], biber['values']))
 ```
 
-### 5. Dimension Reduction
+If you already have a frequencies DataFrame from `calculate_tag_frequencies`
+(which includes a human-readable `tag` column), encode it directly without
+re-tagging:
+
+```python
+from biberplus.tagger import load_config, calculate_tag_frequencies
+from biberplus.reducer import encode_frequencies
+
+config = load_config()
+config.update({'binary_tags': True})
+frequencies_df = calculate_tag_frequencies("Your sample text goes here", config=config)
+
+encoding = encode_frequencies(frequencies_df, config)
+print(encoding['biber']['names'][:5])
+print(encoding['biber']['values'][:5])
+```
+
+### 6. Dimension Reduction
 
 **Using PCA:**
 ```python
