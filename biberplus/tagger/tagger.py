@@ -23,8 +23,9 @@ def tag_text(text, pipeline=None, config=None):
     patterns_dict = build_variable_dictionaries()
     all_tagged = []
 
-    # No need to batch / parallelize small texts
-    if len(text.split(' ')) < config['processing_size'] * 10:  # Arbitrary cutoff
+    # No need to batch / parallelize texts below the configured threshold.
+    token_count = len(text.split(' '))
+    if token_count < config['batching_threshold'] * config['processing_size']:
         return tag_batch(text, config, patterns_dict, pipeline)
 
     if config['n_processes'] > 1:
@@ -36,20 +37,38 @@ def tag_text(text, pipeline=None, config=None):
     return all_tagged
 
 
+# Per-worker globals: the spaCy pipeline and pattern dictionaries are loaded
+# once in each worker process (via the Pool initializer) and reused across all
+# batches that worker handles, instead of being reloaded for every batch.
+_WORKER_PIPELINE = None
+_WORKER_PATTERNS = None
+_WORKER_CONFIG = None
+
+
+def _init_parallel_worker(config):
+    global _WORKER_PIPELINE, _WORKER_PATTERNS, _WORKER_CONFIG
+    _WORKER_CONFIG = config
+    _WORKER_PATTERNS = build_variable_dictionaries()
+    _WORKER_PIPELINE = load_pipeline(config)
+
+
+def _tag_batch_worker(text_batch):
+    return tag_batch(text_batch, _WORKER_CONFIG, _WORKER_PATTERNS, _WORKER_PIPELINE)
+
+
 def tag_text_parallel(text, config):
-    patterns_dict = build_variable_dictionaries()
-
-    # Split the text into batches
-    process_args = []
-
-    for text_batch in simple_split_batching(text, config['processing_size'], show_progress=False):
-        process_args.append((text_batch, config, patterns_dict, None))
+    # Spawn-safe (Windows/macOS default start method): the worker initializer and
+    # batch worker are module-level functions and the initargs are picklable, so
+    # no pickling of local closures is required. Callers on those platforms must
+    # still guard their entry point with `if __name__ == "__main__":`.
+    batches = list(simple_split_batching(text, config['processing_size'], show_progress=False))
 
     all_tagged = []
 
-    with Pool(config['n_processes']) as p:
-        for tagged_words in p.starmap(tag_batch,
-                                      tqdm(process_args, total=len(process_args), disable=not config['show_progress'])):
+    with Pool(config['n_processes'], initializer=_init_parallel_worker, initargs=(config,)) as p:
+        # imap preserves input order, so the tagged output stays in document order.
+        for tagged_words in tqdm(p.imap(_tag_batch_worker, batches),
+                                 total=len(batches), disable=not config['show_progress']):
             all_tagged.extend(tagged_words)
 
     return all_tagged
@@ -78,8 +97,12 @@ def tag_biber_and_binary(tagged_words, patterns_dict, config):
 
 
 def word2dict(word):
+    # Store morphological features as a plain string (e.g. "Tense=Past|VerbForm=Fin")
+    # rather than a spaCy MorphAnalysis object. Substring checks like
+    # "Tense=Past" in feats behave identically, and unlike MorphAnalysis a string
+    # is picklable (required for the multiprocessing path) and JSON-serializable.
     return {'text': word.text,
             'upos': word.pos_,
             'xpos': word.tag_,
-            'feats': word.morph if word.morph else "",
+            'feats': str(word.morph) if word.morph else "",
             'tags': []}

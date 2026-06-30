@@ -7,5 +7,8 @@ use_gpu: False
 show_progress: False
 n_processes: 1
 processing_size: 10000
+# Texts with fewer than batching_threshold * processing_size whitespace tokens
+# are tagged in a single pass instead of being batched/parallelized.
+batching_threshold: 10
 return_text: False
 drop_last_batch_pct: 0.0
