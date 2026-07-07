@@ -10,5 +10,6 @@ __credits__ = 'University of Michigan - The Blablablab'
 
 from . import tagger
 from . import reducer
+from . import neurobiber
 
-__all__ = ['tagger', 'reducer']
+__all__ = ['tagger', 'reducer', 'neurobiber']

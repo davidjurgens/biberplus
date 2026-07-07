@@ -163,4 +163,4 @@ cython_debug/
 /src/tagger/Dev.ipynb
 
 *.csv
-*.tsv
+*.tsv.venv-dev/

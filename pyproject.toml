@@ -50,11 +50,22 @@ dependencies = [
 dev = [
     "ruff>=0.14.0",
     "flake8>=7.0",
+    "pytest>=8.0",
 ]
 plots = [
     "matplotlib",
     "seaborn",
 ]
+neural = [
+    "torch>=2.0",
+    "transformers>=4.40",
+    "scikit-learn>=1.3",
+    "huggingface_hub>=0.20",
+]
+
+[project.scripts]
+biberplus = "biberplus.cli:main"
+neurobiber = "biberplus.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/davidjurgens/biberplus"
@@ -62,7 +73,11 @@ Repository = "https://github.com/davidjurgens/biberplus"
 Issues = "https://github.com/davidjurgens/biberplus/issues"
 
 [tool.setuptools.package-data]
-biberplus = ["tagger/constants/*.txt", "tagger/config.yaml"]
+biberplus = [
+    "tagger/constants/*.txt",
+    "tagger/config.yaml",
+    "neurobiber/assets/*.json",
+]
 
 [tool.setuptools.packages.find]
 include = ["biberplus", "biberplus.*"]
