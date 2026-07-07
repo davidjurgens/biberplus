@@ -19,6 +19,9 @@ Biberplus is a pure Python implementation of the linguistic tagging system intro
   - [Word-Level Tagging](#4-word-level-tagging)
   - [Text Embeddings](#5-text-embeddings)
   - [Dimension Reduction](#6-dimension-reduction)
+- [Neurobiber: Neural Tagging & Style Analysis](#neurobiber-neural-tagging--style-analysis)
+  - [Command Line](#command-line)
+  - [Python API](#python-api)
 - [Configuration](#configuration)
 - [Usage Tips](#usage-tips)
 - [Troubleshooting](#troubleshooting)
@@ -34,6 +37,7 @@ Biberplus is a pure Python implementation of the linguistic tagging system intro
 - **Text Embeddings:** Flatten tagging frequencies into a vector representation.
 - **Dimension Reduction:** Perform PCA and factor analysis on the resulting data.
 - **Performance:** Support for multi-processing and GPU acceleration.
+- **Neurobiber:** A RoBERTa tagger that reproduces all 96 features in one forward pass (macro-F1 0.97 vs. the rules, ~29k tokens/s on one GPU), plus style fingerprints, Biber dimension scores, register placement, and authorship comparison — the same analyses as the [live demo](https://huggingface.co/spaces/Blablablab/neurobiber-demo).
 
 ---
 
@@ -276,6 +280,70 @@ pca_df, explained_variance = tags_pca(frequencies_df, components=2)
 print(pca_df)
 print(explained_variance)
 ```
+
+---
+
+## Neurobiber: Neural Tagging & Style Analysis
+
+[Neurobiber](https://huggingface.co/Blablablab/neurobiber) is a RoBERTa model trained on this library's labels: it predicts the presence of all 96 features in a single forward pass, reproducing the rule tagger at macro-F1 0.97 while running two orders of magnitude faster than single-thread taggers. Try everything below in the browser first: **[live demo](https://huggingface.co/spaces/Blablablab/neurobiber-demo)**.
+
+```bash
+pip install biberplus[neural]
+```
+
+### Command Line
+
+Every command reads a file path or `-` for stdin. `tag` uses the rule tagger (no torch needed); the rest use Neurobiber.
+
+```bash
+$ biberplus tag essay.txt              # which features fire on each token
+It           PIT (Pronoun it)
+n't          XX0 (Not-negation), CONT (Contractions)
+seem         SMP (Seem/appear)
+...
+
+$ biberplus vector essay.txt           # named 96-dim probabilities as JSON
+{"QUAN": 0.0, "XX0": 0.9884, "CONT": 1.0, ...}
+
+$ biberplus fingerprint essay.txt      # style profile + Biber dimensions + registers
+Biber dimensions (relative to CORE registers):
+  Informational --------------------o Involved            (+1.66)
+  Non-narrative o-------------------- Narrative           (-2.75)
+  ...
+Reads most like: personal blog · discussion forum · advice
+
+$ biberplus compare a.txt b.txt        # same-author probability + driver features
+Same-author probability: 0.46 -> different authors (threshold 0.5)
+
+$ biberplus benchmark                  # measured tokens/s vs the paper's rates
+```
+
+`vector` and `fingerprint` batch over corpora with `--jsonl corpus.jsonl --text-key text`, emitting one JSON object per line. `neurobiber` is an alias for the same CLI.
+
+### Python API
+
+```python
+from biberplus.neurobiber.model import predict_probs
+from biberplus.neurobiber.fingerprint import fingerprint
+
+probs = predict_probs(["It doesn't seem likely that we'll finish today."],
+                      max_chunks_per_text=1)[0]
+fingerprint(probs)
+# {'categories': {'Reduced & dispreferred forms': 0.34, ...},
+#  'dimensions': [{'name': 'Involved vs. informational', 'score': 1.66, ...}, ...],
+#  'nearest_registers': [{'name': 'discussion forum', 'similarity': 0.82}, ...]}
+```
+
+Authorship comparison downloads its PAN 2020 random forest from the Hub on first use (override with `NEUROBIBER_AV_PATH`):
+
+```python
+from biberplus.neurobiber.authorship import compare_texts
+compare_texts(text_a, text_b)
+# {'same_author_probability': 0.46, 'verdict': 'different authors',
+#  'drivers': [{'code': 'THAC', 'agree': False, ...}, ...], ...}
+```
+
+Not forensic-grade: authorship accuracy on PAN 2020 is useful signal, never sole evidence. Runnable scripts for all four workflows are in [`examples/`](examples/).
 
 ---
 
